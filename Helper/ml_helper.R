@@ -99,6 +99,44 @@ DataScale <- function(col_nms, dataset, rep_na = FALSE, rep_na_with = 0, ex_col_
 }
 
 ##
+# Format data based on the model
+##
+FormatData4Model <- function(dataset,
+                             model = c("decision_tree",
+                                       "random_forest"),
+                             target = ""){
+  
+  ds <- dataset
+  mdl_nm <- match.arg(model)
+  res <- switch(
+    mdl_nm,
+    decision_tree = {
+      # Format charater to factor and everything numeric
+      for(i in 1:ncol(ds)){
+        tmp <- ds[,i]
+        if(colnames(ds)[i] == target){
+          tmp_mod <- as.factor(tmp)
+        } else {  
+          if(class(tmp)[1] == "character"){
+            tmp_mod <- as.factor(tmp)
+          } else if(class(tmp)[1] == "factor") {
+            tmp_mod <- tmp
+          } else {
+            tmp_mod <- as.numeric(tmp)
+          }
+        }
+        ds[,i] <- tmp_mod
+      }
+      res <- ds
+    },
+    random_forest = {
+      
+    }
+  )
+  return(res)
+}
+
+##
 # Plot functions for fitting visualization
 ##
 FitPlot <- function(model, type, data, iter_col, tr_col, vl_col){
