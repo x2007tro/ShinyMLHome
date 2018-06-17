@@ -102,37 +102,51 @@ DataScale <- function(col_nms, dataset, rep_na = FALSE, rep_na_with = 0, ex_col_
 # Format data based on the model
 ##
 FormatData4Model <- function(dataset,
-                             model = c("decision_tree",
-                                       "random_forest"),
+                             job = c("bc", "mc", "rg"),
+                             model = c("regression",
+                                       "naive_bayes",
+                                       "decision_tree",
+                                       "random_forest",
+                                       "ada_boost",
+                                       "gbm",
+                                       "xgbtree",
+                                       "tensorflow"),
                              target = ""){
   
   ds <- dataset
   mdl_nm <- match.arg(model)
-  res <- switch(
-    mdl_nm,
-    decision_tree = {
-      # Format charater to factor and everything numeric
-      for(i in 1:ncol(ds)){
-        tmp <- ds[,i]
-        if(colnames(ds)[i] == target){
+  
+  if(mdl_nm == "regression" | mdl_nm == "naive_bayes" | mdl_nm == "decision_tree" | 
+     mdl_nm == "ada_boost" | mdl_nm == "random_forest" | mdl_nm == "gbm"){
+    # Format charater to factor and everything numeric
+    for(i in 1:ncol(ds)){
+      tmp <- ds[,i]
+      if(colnames(ds)[i] == target){
+        if(job == "rg"){
+          tmp_mod <- tmp
+        } else {
           tmp_mod <- as.factor(tmp)
-        } else {  
-          if(class(tmp)[1] == "character"){
-            tmp_mod <- as.factor(tmp)
-          } else if(class(tmp)[1] == "factor") {
-            tmp_mod <- tmp
-          } else {
-            tmp_mod <- as.numeric(tmp)
-          }
         }
-        ds[,i] <- tmp_mod
+      } else {  
+        if(class(tmp)[1] == "character"){
+          tmp_mod <- as.factor(tmp)
+        } else if(class(tmp)[1] == "factor") {
+          tmp_mod <- tmp
+        } else {
+          tmp_mod <- as.numeric(tmp)
+        }
       }
-      res <- ds
-    },
-    random_forest = {
-      
+      ds[,i] <- tmp_mod
     }
-  )
+    res <- ds
+  } else if (mdl_nm == "xgbtree" | mdl_nm == "tensorflow") {
+    # do nothing
+    res <- ds
+  } else {
+    # not specified
+    res <- ds
+  }
+
   return(res)
 }
 

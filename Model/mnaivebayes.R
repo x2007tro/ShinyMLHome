@@ -9,7 +9,7 @@ library(naivebayes)
 ##
 datasetp <- read.csv("C:/Users/KE/OneDrive/Development/Data Science/Shiny/Titanic2/Dataset/train_prelim2.csv", 
                      header = TRUE, stringsAsFactors = FALSE)
-datasetf <- FormatData4Model(datasetp, model = "decision_tree", target = "Survived")
+datasetf <- FormatData4Model(datasetp, job = "bc", model = "naive_bayes", target = "Survived")
 
 rps_var <- "Survived"
 dep_vars <- colnames(datasetf)[!(colnames(datasetf) %in% rps_var)]
