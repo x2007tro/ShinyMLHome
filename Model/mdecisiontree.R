@@ -1,5 +1,5 @@
 ##
-# Install tree package, if not
+# Install package, if not
 ##
 if(!("rpart" %in% rownames(installed.packages()))) { install.packages("rpart") }
 if(!("rpart.plot" %in% rownames(installed.packages()))) { install.packages("rpart.plot") }
@@ -33,7 +33,6 @@ x <- mdl$variable.importance
 bestcp <- mdl$cptable[which.min(mdl$cptable[,"xerror"]),"CP"]
 mdl_pruned <- prune(mdl, cp = bestcp)
 rpart::printcp(mdl_pruned)
-rpart:
 rpart.plot::rpart.plot(mdl_pruned, faclen = -1, type = 4, extra = "auto")
 
 ##
