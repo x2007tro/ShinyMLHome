@@ -6,7 +6,7 @@ if(!("rpart" %in% rownames(installed.packages()))) { install.packages("rpart") }
 if(!("rpart.plot" %in% rownames(installed.packages()))) { install.packages("rpart.plot") }
 library(ada)
 library(rpart)
-library(rpart.plot)
+library(rpart.plot) 
 
 ##
 # Select and format data
