@@ -117,7 +117,7 @@ FormatData4Model <- function(dataset,
   mdl_nm <- match.arg(model)
   
   if(mdl_nm == "regression" | mdl_nm == "naive_bayes" | mdl_nm == "decision_tree" | 
-     mdl_nm == "ada_boost" | mdl_nm == "random_forest" | mdl_nm == "gbm"){
+     mdl_nm == "ada_boost" | mdl_nm == "random_forest" | mdl_nm == "gbm_h2o"){
     # Format charater to factor and everything numeric
     for(i in 1:ncol(ds)){
       tmp <- ds[,i]

@@ -126,6 +126,7 @@ TrainXgbT2 <- function(proj_nm = "",
                               booster = "gbtree",
                               objective = mdl_lsf,
                               nrounds = mdl_ep,
+                              early_stopping_rounds = 10,
                               num_class = length(unique(mdl_trl)),
                               watchlist = list(train=dm_strain, test=dm_valdn),
                               verbose = 1)
@@ -136,6 +137,7 @@ TrainXgbT2 <- function(proj_nm = "",
                               booster = "gbtree",
                               objective = mdl_lsf,
                               nrounds = mdl_ep,
+                              early_stopping_rounds = 10,
                               watchlist = list(train=dm_strain, test=dm_valdn),
                               verbose = 1)
   }
