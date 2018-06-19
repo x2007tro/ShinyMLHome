@@ -1,9 +1,4 @@
 ##
-# Library
-##
-library(ggplot2)
-
-##
 # Data inspection
 ##
 DataInspection <- function(dataset){

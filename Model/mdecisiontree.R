@@ -1,12 +1,4 @@
 ##
-# Install package, if not
-##
-if(!("rpart" %in% rownames(installed.packages()))) { install.packages("rpart") }
-if(!("rpart.plot" %in% rownames(installed.packages()))) { install.packages("rpart.plot") }
-library(rpart)
-library(rpart.plot)
-
-##
 # Select and format data
 ##
 datasetp <- read.csv("C:/Users/KE/OneDrive/Development/Data Science/Shiny/Titanic2/Dataset/train_prelim2.csv", 

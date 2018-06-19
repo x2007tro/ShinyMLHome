@@ -10,17 +10,6 @@
 ##
 
 ##
-# keras helper
-##
-library(xgboost)
-library(caret)
-library(Matrix)
-library(zeallot)
-library(ggplot2)
-library(dplyr)
-library(ggpubr)
-
-##
 # function TrainTF
 ##
 TrainXgbT2 <- function(proj_nm = "",

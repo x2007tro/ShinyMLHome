@@ -1,12 +1,7 @@
 ##
 # Install package, if not
 ##
-if(!("ada" %in% rownames(installed.packages()))) { install.packages("ada") }
-if(!("rpart" %in% rownames(installed.packages()))) { install.packages("rpart") }
-if(!("rpart.plot" %in% rownames(installed.packages()))) { install.packages("rpart.plot") }
-library(ada)
-library(rpart)
-library(rpart.plot) 
+
 
 ##
 # Select and format data

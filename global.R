@@ -1,11 +1,65 @@
 ##
+# Package installer
+##
+# shiny app
+if(!("shiny" %in% rownames(installed.packages()))) { install.packages("shiny") }
+if(!("DT" %in% rownames(installed.packages()))) { install.packages("DT") }
+if(!("shinythemes" %in% rownames(installed.packages()))) { install.packages("shinythemes") }
+
+# utilities
+if(!("devtools" %in% rownames(installed.packages()))) { install.packages("devtools") }
+if(!("corrplot" %in% rownames(installed.packages()))) { install.packages("corrplot") }
+if(!("ggplot2" %in% rownames(installed.packages()))) { install.packages("ggplot2") }
+if(!("dplyr" %in% rownames(installed.packages()))) { install.packages("dplyr") }
+if(!("robustbase" %in% rownames(installed.packages()))) { install.packages("robustbase") }
+if(!("e1071" %in% rownames(installed.packages()))) { install.packages("e1071") }
+if(!("zeallot" %in% rownames(installed.packages()))) { install.packages("zeallot") }
+if(!("ggpubr" %in% rownames(installed.packages()))) { install.packages("ggpubr") }
+if(!("Matrix" %in% rownames(installed.packages()))) { install.packages("Matrix") }
+if(!("foreach" %in% rownames(installed.packages()))) { install.packages("foreach") }
+if(!("rBayesianOptimization" %in% rownames(installed.packages()))) { install.packages("rBayesianOptimization", dependencies = TRUE) }
+
+# machine learning
+if(!("caret" %in% rownames(installed.packages()))) { devtools::install_github('topepo/caret/pkg/caret') }
+if(!("keras" %in% rownames(installed.packages()))) { devtools::install_github('rstudio/keras') }
+if(!("xgboost" %in% rownames(installed.packages()))) { install.packages("xgboost") }
+if(!("ada" %in% rownames(installed.packages()))) { install.packages("ada") }
+if(!("rpart" %in% rownames(installed.packages()))) { install.packages("rpart") }
+if(!("rpart.plot" %in% rownames(installed.packages()))) { install.packages("rpart.plot") }
+
+# load libraries
+library(shiny)
+library(DT)
+library(shinythemes)
+
+library(devtools)
+library(corrplot)
+library(ggplot2)
+library(dplyr)
+library(zeallot)
+library(Matrix)
+library(ggpubr)
+library(rBayesianOptimization)
+
+library(caret)
+library(keras)
+library(xgboost)
+library(ada)
+library(rpart)
+library(rpart.plot) 
+
+# install keras if not installed
+# install_keras(
+#   method = "conda",
+#   tensorflow = "default")
+
+##
 # Directory parameters
 ##
 dev_dir <- paste0("C:/Users/",Sys.info()["user"], "/OneDrive/Development/")
-root_dir <- paste0(dev_dir, "R/Independant Projects/DeepLearning/")
+root_dir <- paste0(dev_dir, "Data Science/Projects/")
 proj_dir <- paste0(root_dir, "Titanic/")
-shiny_dir <- paste0(dev_dir, "Shiny/MLHome/")
-setwd(proj_dir)
+shiny_dir <- paste0("C:/Users/Ke/Desktop/Data Science/ShinyMLHome/")
 
 ##
 # Load helpers

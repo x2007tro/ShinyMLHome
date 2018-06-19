@@ -19,7 +19,7 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
   
   # css style
   tags$head(
-    style
+    includeCSS("mlhome_style.css")
   ),
   
   navbarPage(
@@ -43,21 +43,60 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
       "Model",
       navlistPanel(
         ##
-        # Standalone models
+        # Basic
         ##
-        "Standalone",
+        "Basic",
         widths = c(2, 10),
         # regression
         tabPanel(
           "Regression",
           tabsetPanel(
             tp_model_regression_train
-            #tp_model_regression_test
+          )
+        ),
+        # Naive Bayes model
+        tabPanel(
+          "Naive Bayes",
+          tabsetPanel(
+
+          )
+        ),
+        
+        ##
+        # Tree models
+        ##
+        "Tree",
+        # Single Tree
+        tabPanel(
+          "Decision Tree",
+          tabsetPanel(
+            
+          )
+        ),
+        # Random Forest
+        tabPanel(
+          "Random Forest",
+          tabsetPanel(
+            
+          )
+        ),
+        # Adaptive Boost
+        tabPanel(
+          "Adapative Boosting",
+          tabsetPanel(
+            
+          )
+        ),
+        # GBM H2O
+        tabPanel(
+          "H2O Gradient Boosting Tree",
+          tabsetPanel(
+            
           )
         ),
         # XbgTree model
         tabPanel(
-          "XgbTree",
+          "Extreme Gradient Boosting Tree",
           tabsetPanel(
             tp_model_xgbtree_par,
             tp_model_xgbtree_grid,
@@ -65,8 +104,13 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
             #tp_model_xgbtree_test
           )
         ),
-        # Tensorflow model
+        
+        ##
+        # Neural Nets
+        ##
+        "Deep Learning",
         tabPanel(
+          # Tensorflow model
           "Tensorflow",
           tabsetPanel(
             tp_model_tensorflow_par,
@@ -75,6 +119,14 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
             #tp_model_tensorflow_test
           )
         ),
+        tabPanel(
+          # NNets H2O
+          "H2O NNets",
+          tabsetPanel(
+            
+          )
+        ),
+        
         ##
         # Ensembled models
         ##

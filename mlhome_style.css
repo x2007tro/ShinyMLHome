@@ -1,0 +1,28 @@
+/* Smaller font for preformatted text */
+pre, .table {
+  font-size: smaller;
+}
+body {
+  font-size: 12px;
+  font-weight: bold;
+  /*color: #ffffff;*/
+  /*background: #000000;*/
+}
+.nm_fields {
+  padding: 0 2px;
+  margin: 0;
+  width: 90px;
+  float: left;
+}
+.par_fields {
+  padding: 0 2px;
+  margin: 0 0;
+  width: 90px;
+  float: left;
+}
+.hint_fields {
+  padding: 0 2px;
+  margin: 0;
+  width: 90px;
+  float: left;
+}

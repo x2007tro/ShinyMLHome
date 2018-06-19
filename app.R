@@ -1,10 +1,4 @@
 ##
-# Load liabs
-##
-lib <- c("shiny","DT","ggplot2", "shinythemes")
-lapply(lib, function(x){library(x, character.only = TRUE)})
-
-##
 # Source server and ui components
 ##
 source("./global.R", local = FALSE)
