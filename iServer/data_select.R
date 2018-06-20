@@ -4,9 +4,9 @@
 output$dss_features <- renderUI({
   list(
     selectInput("dss_slt_fts", label = NULL, 
-                choices = peek()$feature,
+                choices = dataset()$specs$feature,
                 multiple = TRUE, selectize = TRUE, 
-                selected = peek()$feature),
+                selected = dataset()$specs$feature),
     actionButton("dss_select", "Select", width = blotter_field_default_width)
   )
 })
@@ -16,7 +16,7 @@ output$dss_features <- renderUI({
 ##
 observeEvent(input$dss_select, {
   # select target fields
-  old_ds <- data()
+  old_ds <- dataset()$predictors
   new_ds <<- old_ds[,input$dss_slt_fts]
   new_ds_peek <- DataInspection(new_ds)
   
@@ -42,11 +42,8 @@ observeEvent(input$dss_select, {
   # Display detailed data
   ##
   output$dss_dts <- DT::renderDataTable({
-    ifelse(input$cgen_label_field == "", 
-           new_ds_4d <- new_ds,
-           new_ds_4d <- new_ds[,!(colnames(new_ds) %in% input$cgen_label_field)])
     DT::datatable(
-      new_ds_4d, 
+      new_ds, 
       options = list(
         pageLength = 10,
         orderClasses = TRUE,
@@ -63,15 +60,16 @@ observeEvent(input$dss_select, {
   # Display label data
   ##
   output$dss_lbs <- DT::renderDataTable({
-    lb_4d <- data.frame(labels = targets()[1:10])
-    colnames(lb_4d) <- input$cgen_label_field
     DT::datatable(
-      lb_4d, 
+      dataset()$target,
       options = list(
-        pageLength = 10,
+        pageLength = nrow(new_ds_peek),
         orderClasses = FALSE,
-        searching = TRUE,
-        paging = FALSE),
+        searching = FALSE,
+        paging = TRUE,
+        scrollX = 400,
+        scrollY = 400,
+        scrollCollapse = TRUE),
       rownames = FALSE
     )
   })
@@ -82,18 +80,11 @@ observeEvent(input$dss_select, {
 ##
 observeEvent(input$dss_save, {
   ff <- input$dss_nname
-  fdir <- dirname(ff)
-  CreateDirIfNotExist(fdir)
+  WriteDataToADB(input$cgen_db_path, new_ds, input$dss_nname)
   
-  if(substr(ff,(nchar(ff)+1)-3,nchar(ff)) == "csv"){
-    req(new_ds)
-    write.csv(new_ds, file = ff, row.names = FALSE)
-    msg <- paste0("Data is saved at ",
-                  format(Sys.Date(),"%Y-%m-%d")," ",
-                  format(Sys.time(),"%H:%M:%S"))
-  } else {
-    msg <- "Data is not saved!"
-  }
+  msg <- paste0("Data is saved at ",
+                format(Sys.Date(),"%Y-%m-%d")," ",
+                format(Sys.time(),"%H:%M:%S"))
   
   # display a message
   output$dss_save_message <- renderText({ msg })

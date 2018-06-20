@@ -2,15 +2,18 @@
 # Feature selection display
 ##
 output$dsf_ex_cols <- renderUI({
+  specs <- dataset()$specs
+  tb_scale <- specs[specs[,"class"] == "integer" | specs[,"class"] == "numeric","feature"]
+  tb_ohe <- specs[specs[,"class"] == "character","feature"]
   list(
-    selectInput("dsf_no_scale", label = "Numerical but no Scale", 
-                choices = peek()$feature,
-                multiple = TRUE, selectize = TRUE, 
-                selected = input$cgen_label_field),
-    selectInput("dsf_no_ohe", label = "Char but no OHE", 
-                choices = peek()$feature,
-                multiple = TRUE, selectize = TRUE, 
-                selected = input$cgen_label_field)
+    selectInput("dsf_scale", label = "to be scaled", 
+                choices = specs$feature,
+                multiple = TRUE, selectize = TRUE,
+                selected = tb_scale),
+    selectInput("dsf_ohe", label = "to be OHE", 
+                choices = specs$feature,
+                multiple = TRUE, selectize = TRUE,
+                selected = tb_ohe)
   )
 })
 
@@ -20,23 +23,15 @@ output$dsf_ex_cols <- renderUI({
 observeEvent(input$dsf_format, {
   # format data
   fmt <- input$dsf_format_choice
-  ds_fmtd <- data()
-  ds_final <<- data()
-  ds_peek <- peek()
+  ds_fmtd <- dataset()$predictors
+  ds_final <<- dataset()$predictors
+  ds_peek <- dataset()$specs
   
   for(i in 1:length(fmt)){
     if(fmt[i] == format_options[1]){  # Scale
-      if(length(input$dsf_no_scale) == 0) {
-        ds_fmtd <- DataScale(ds_peek$feature, ds_fmtd, rep_na = TRUE, rep_na_with = 0)
-      } else {
-        ds_fmtd <- DataScale(ds_peek$feature, ds_fmtd, rep_na = TRUE, rep_na_with = 0, ex_col_nms = input$dsf_no_scale)
-      }
+      ds_fmtd <- DataScale(input$dsf_scale, ds_fmtd, rep_na = TRUE, rep_na_with = 0)
     } else if (fmt[i] == format_options[2]){  # OneHotEncoding
-      if(length(input$dsf_no_ohe) == 0) {
-        ds_fmtd <- OHE(ds_peek[ds_peek[,"class"] == "character","feature"], ds_fmtd)
-      } else {
-        ds_fmtd <- OHE(ds_peek[ds_peek[,"class"] == "character","feature"], ds_fmtd, ex_col_nms = input$dsf_no_ohe)
-      }
+      ds_fmtd <- OHE(input$dsf_ohe, ds_fmtd)
     } else (
       print("Error invalid format options")
     )
@@ -66,11 +61,8 @@ observeEvent(input$dsf_format, {
   # Display detailed data
   ##
   output$dsf_dts <- DT::renderDataTable({
-    ifelse(input$cgen_label_field == "", 
-           ds_fmtd_4d <- ds_fmtd,
-           ds_fmtd_4d <- ds_fmtd[,!(colnames(ds_fmtd) %in% input$cgen_label_field)])
     DT::datatable(
-      ds_fmtd_4d, 
+      ds_fmtd, 
       options = list(
         pageLength = 10,
         orderClasses = TRUE,
@@ -87,15 +79,16 @@ observeEvent(input$dsf_format, {
   # Display label data
   ##
   output$dsf_lbs <- DT::renderDataTable({
-    lb_4d <- data.frame(labels = targets()[1:10])
-    colnames(lb_4d) <- input$cgen_label_field
     DT::datatable(
-      lb_4d, 
+      dataset()$target,
       options = list(
-        pageLength = 10,
+        pageLength = nrow(ds_fmtd_peek),
         orderClasses = FALSE,
-        searching = TRUE,
-        paging = FALSE),
+        searching = FALSE,
+        paging = TRUE,
+        scrollX = 400,
+        scrollY = 400,
+        scrollCollapse = TRUE),
       rownames = FALSE
     )
   })
@@ -106,18 +99,12 @@ observeEvent(input$dsf_format, {
 ##
 observeEvent(input$dsf_save, {
   ff <- input$dsf_nname
-  fdir <- dirname(ff)
-  CreateDirIfNotExist(fdir)
+  WriteDataToADB(input$cgen_db_path, ds_final, input$dsf_nname)
   
-  if(substr(ff,(nchar(ff)+1)-3,nchar(ff)) == "csv"){
-    write.csv(ds_final, file = ff, row.names = FALSE)
-    msg <- paste0("Data is saved at ",
-                  format(Sys.Date(),"%Y-%m-%d")," ",
-                  format(Sys.time(),"%H:%M:%S"))
-  } else {
-    msg <- "Data is not saved!"
-  }
-  
+  msg <- paste0("Data is saved at ",
+                format(Sys.Date(),"%Y-%m-%d")," ",
+                format(Sys.time(),"%H:%M:%S"))
+
   # display a message
   output$dsf_save_message <- renderText({ msg })
 })

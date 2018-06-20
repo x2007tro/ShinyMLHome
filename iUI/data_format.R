@@ -15,7 +15,7 @@ tp_data_format <- tabPanel(
       tags$div(
         style="padding:0px, margin:0px, height:50%",
         textInput("dsf_nname", label = NULL, 
-                  value = paste0(proj_dir, "Dataset/train_final.csv"), 
+                  value = "Predictors R**", 
                   width = file_dir_field_width)
       ),
       tags$div(
@@ -25,21 +25,23 @@ tp_data_format <- tabPanel(
       )
     )   
   ),
-  br(), 
+  br(),
   fluidRow(
     column(
-      tags$h5("OVERVIEW"),
-      width = 3,
+      tags$h5("PREDICTORS"),
+      width = tp_wid_wde,
+      DT::dataTableOutput("dsf_dts")
+    ) 
+  ),
+  fluidRow(
+    column(
+      tags$h5("SPECS"),
+      width = tp_wid_hlf,
       DT::dataTableOutput("dsf_ovw")
     ),
     column(
-      tags$h5("DATASET"),
-      width = 7,
-      DT::dataTableOutput("dsf_dts")
-    ),
-    column(
-      tags$h5("LABELS"),
-      width = 2,
+      tags$h5("TARGET"),
+      width = tp_wid_nar,
       DT::dataTableOutput("dsf_lbs")
     )
   )

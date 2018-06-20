@@ -42,19 +42,17 @@ OHEOneCol <- function(col_nm, dataset){
   return(as.data.frame(res, stringsAsFactors = FALSE))
 }
 
-OHE <- function(col_nms, dataset, ex_col_nms = c()){
-  if(length(ex_col_nms) == 0){
-    rev_col_nms <- col_nms
+OHE <- function(col_nms, dataset){
+  if(length(col_nms) == 0){
+    dataset_new <- dataset
   } else {
-    rev_col_nms <- col_nms[!(col_nms %in% ex_col_nms)]
+    dataset_remain <- dataset[,!(colnames(dataset) %in% col_nms)]
+    res <- lapply(col_nms, OHEOneCol, dataset)
+    res_all <- dplyr::bind_cols(res)
+    dataset_new <- cbind(dataset_remain, res_all)
   }
   
-  dataset_remain <- dataset[,!(colnames(dataset) %in% rev_col_nms)]
-  res <- lapply(col_nms, OHEOneCol, dataset)
-  res_all <- dplyr::bind_cols(res)
-  dataset_new <- cbind(dataset_remain, res_all)
-  
-  return(as.matrix(dataset_new))
+  return(dataset_new)
 }
 
 ##
@@ -72,22 +70,15 @@ DataScaleOneCol <- function(col_nm, dataset, rep_na, rep_na_with){
   return(as.data.frame(res, stringsAsFactors = FALSE))
 }
 
-DataScale <- function(col_nms, dataset, rep_na = FALSE, rep_na_with = 0, ex_col_nms = c()){
-  if(length(ex_col_nms) == 0){
-    rev_col_nms <- col_nms
-    res <- lapply(rev_col_nms, DataScaleOneCol, dataset, rep_na, rep_na_with)
-    res_all <- dplyr::bind_cols(res)
-    dataset_new <- res_all
-    colnames(dataset_new) <- rev_col_nms
+DataScale <- function(col_nms, dataset, rep_na = FALSE, rep_na_with = 0){
+  if(length(col_nms) == 0){
+    dataset_new <- dataset
   } else {
-    rev_col_nms <- col_nms[!(col_nms %in% ex_col_nms)]
-    res <- lapply(rev_col_nms, DataScaleOneCol, dataset, rep_na, rep_na_with)
+    dataset_remain <- dataset[,!(colnames(dataset) %in% col_nms)]
+    res <- lapply(col_nms, DataScaleOneCol, dataset, rep_na, rep_na_with)
     res_all <- dplyr::bind_cols(res)
-    dataset_new <- res_all
-    colnames(dataset_new) <- rev_col_nms
-    
-    dataset_remain <- dataset[,!(colnames(dataset) %in% rev_col_nms)]
-    dataset_new <- cbind(dataset_remain, dataset_new)
+    colnames(res_all) <- col_nms
+    dataset_new <- cbind(dataset_remain, res_all)
   }
   
   return(dataset_new)
@@ -348,4 +339,45 @@ GKTauMatrix <- function(col_nms, dataset){
   }
   
   return(res)
+}
+
+##
+# Return an active connection to DB
+##
+ConnAccess <- function(db_path){
+  conn_string <- paste("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=",db_path,sep="")
+  conn <- RODBC::odbcDriverConnect(conn_string)
+  return(conn)
+}
+
+##
+# Read a table from access db
+##
+ReadDataFromADB <- function(db_path, tbl_name){
+  conn <- ConnAccess(db_path)
+  df <- RODBC::sqlFetch(conn, tbl_name)
+  RODBC::odbcClose(conn)
+  return(df)
+}
+
+##
+# Write a table to access db
+##
+WriteDataToADB <- function(db_path, data, tbl_name){
+  conn <- ConnAccess(db_path)
+  df <- RODBC::sqlSave(conn, data, tablename = tbl_name, append = TRUE, rownames = FALSE,
+                       colnames = FALSE)
+  RODBC::odbcClose(conn)
+  return(df)
+}
+
+##
+# List all tables and queries
+##
+ListTblsFromADB <- function(db_path){
+  conn <- ConnAccess(db_path)
+  dfs_all <- RODBC::sqlTables(conn, tableType = "TABLE")
+  dfs_tn <- dfs_all$TABLE_NAME
+  RODBC::odbcClose(conn)
+  return(unlist(dfs_tn))
 }

@@ -18,6 +18,7 @@ if(!("ggpubr" %in% rownames(installed.packages()))) { install.packages("ggpubr")
 if(!("Matrix" %in% rownames(installed.packages()))) { install.packages("Matrix") }
 if(!("foreach" %in% rownames(installed.packages()))) { install.packages("foreach") }
 if(!("rBayesianOptimization" %in% rownames(installed.packages()))) { install.packages("rBayesianOptimization", dependencies = TRUE) }
+if(!("RODBC" %in% rownames(installed.packages()))) { install.packages("RODBC") }
 
 # machine learning
 if(!("caret" %in% rownames(installed.packages()))) { devtools::install_github('topepo/caret/pkg/caret') }
@@ -26,6 +27,7 @@ if(!("xgboost" %in% rownames(installed.packages()))) { install.packages("xgboost
 if(!("ada" %in% rownames(installed.packages()))) { install.packages("ada") }
 if(!("rpart" %in% rownames(installed.packages()))) { install.packages("rpart") }
 if(!("rpart.plot" %in% rownames(installed.packages()))) { install.packages("rpart.plot") }
+if(!("nnet" %in% rownames(installed.packages()))) { install.packages("nnet") }
 
 # load libraries
 library(shiny)
@@ -40,6 +42,7 @@ library(zeallot)
 library(Matrix)
 library(ggpubr)
 library(rBayesianOptimization)
+library(RODBC)
 
 library(caret)
 library(keras)
@@ -47,6 +50,7 @@ library(xgboost)
 library(ada)
 library(rpart)
 library(rpart.plot) 
+library(nnet)
 
 # install keras if not installed
 # install_keras(
@@ -90,6 +94,9 @@ bs_pars_def <- c(1, 0, 10)
 bs_pars_rng <- c("0 - 1 (1)", "0 - 1 (0)", "0 - inf (10)")
 all_models <- c("tensorflow", "xgbtree", "regression")
 image_dim <- c(640, 480)   # width, height
+db_path <- "C:/Users/Ke/OneDrive/Development/Data Science/Projects/Titanic/Dataset/train.accdb"
+db_target_src <- "000_030_Target"
+db_predictors_src <- "Predictors R01"
 
 ##
 # Parameters for data panel
