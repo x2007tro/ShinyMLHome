@@ -87,52 +87,85 @@ DataScale <- function(col_nms, dataset, rep_na = FALSE, rep_na_with = 0){
 ##
 # Format data based on the model
 ##
-FormatData4Model <- function(dataset,
+FormatData4Model <- function(prdctrs, tgt, tgt_map,
                              job = c("bc", "mc", "rg"),
-                             model = c("regression",
-                                       "naive_bayes",
-                                       "decision_tree",
-                                       "random_forest",
-                                       "ada_boost",
-                                       "gbm",
-                                       "xgbtree",
-                                       "tensorflow"),
-                             target = ""){
+                             model = all_models){
   
-  ds <- dataset
   mdl_nm <- match.arg(model)
+  tgt_map_used <- FALSE
+  tgt_nm <- colnames(tgt)[1]
+  tgt <- tgt[,1]
+  
+  # -- target manipulation --
+  # if job = regression, 
+  # - target would be numerical;
+  # else,
+  # - target would be factor for most models except for xgbtree and tensorflow
+  #
+  if(length(tgt) == 0){
+    new_tgt <- c()
+  } else {
+    if(job == "rg"){
+      # all targets has to be numerical
+      new_tgt <- as.numeric(tgt) * 1.0
+    } else {
+      if(mdl_nm == "regression" | mdl_nm == "naive_bayes" | mdl_nm == "decision_tree" | 
+         mdl_nm == "ada_boost" | mdl_nm == "random_forest" | mdl_nm == "gbm_h2o"){
+        # if above models, target should be factors
+        new_tgt <- as.factor(tgt)
+      } else if (mdl_nm == "tensorflow") {
+        # if tensorflow, target should be non-factors
+        new_tgt <- tgt
+      } else if (mdl_nm == "xgbtree"){
+        # if xgbtree, target should be numerical
+        tmp_tgt <- dplyr::inner_join(tgt, map, by = c("StrTarget"))
+        new_tgt <- tmp_tgt$NumTarget
+        tgt_nm <- "NumTarget"
+        tgt_map_used <- TRUE
+      } else {
+        new_tgt <- tgt
+      }
+    }
+  }
+  
+  # -- Predictors manipulation --
+  # if certain model, character has to be converted to factor,
+  # else if xgbtree, data has to be matrix,
+  # else, keep the data unchanged
+  #
   
   if(mdl_nm == "regression" | mdl_nm == "naive_bayes" | mdl_nm == "decision_tree" | 
      mdl_nm == "ada_boost" | mdl_nm == "random_forest" | mdl_nm == "gbm_h2o"){
     # Format charater to factor and everything numeric
-    for(i in 1:ncol(ds)){
-      tmp <- ds[,i]
-      if(colnames(ds)[i] == target){
-        if(job == "rg"){
-          tmp_mod <- tmp
-        } else {
-          tmp_mod <- as.factor(tmp)
-        }
-      } else {  
-        if(class(tmp)[1] == "character"){
-          tmp_mod <- as.factor(tmp)
-        } else if(class(tmp)[1] == "factor") {
-          tmp_mod <- tmp
-        } else {
-          tmp_mod <- as.numeric(tmp)
-        }
+    for(i in 1:ncol(prdctrs)){
+      tmp <- prdctrs[,i]
+      if(class(tmp)[1] == "character"){
+        tmp_mod <- as.factor(tmp)
+      } else if(class(tmp)[1] == "factor") {
+        tmp_mod <- tmp
+      } else {
+        tmp_mod <- as.numeric(tmp) * 1.0
       }
-      ds[,i] <- tmp_mod
+      prdctrs[,i] <- tmp_mod
     }
-    res <- ds
-  } else if (mdl_nm == "xgbtree" | mdl_nm == "tensorflow") {
+    new_prdctrs <- prdctrs
+  } else if (mdl_nm == "xgbtree") {
+    # data has to be matrix
+    new_prdctrs <- as.matrix(prdctrs) * 1.0
+  } else if (mdl_nm == "tensorflow") {
     # do nothing
-    res <- ds
+    new_prdctrs <- prdctrs
   } else {
-    # not specified
-    res <- ds
+    new_prdctrs <- prdctrs
   }
-
+  
+  res <- list(
+    target = new_tgt,
+    target_name = tgt_nm,
+    predictors = new_prdctrs,
+    target_map_used = tgt_map_used
+  )
+  
   return(res)
 }
 
@@ -197,7 +230,88 @@ CreateParRange <- function(type = c("exact", "grid", "bayesian"), beg = 0, end =
 ##
 # Prediction
 ##
-PredictMe <- function(model, data, label = c(), job, caret = FALSE){
+PredictMe <- function(model, data, label = c(), job, 
+                      model_name = all_models){
+  if(model_name == "decision_tree"){
+    # -- decision tree
+    # if rg, no probability
+    # else, there is prob
+    if(job == "bc" | job == "mc"){
+      probs <- predict(model, data, type = "prob")
+      pred_fac <- predict(model, data, type = "class")
+      pred <- as.character(pred_fac)
+      # if bc, calculate confusion matrix
+      if(job == "bc"){
+        cf <- caret::confusionMatrix(pred_fac, label)
+      } else {
+        cf <- data.frame(f1 = character(0))
+      }
+    } else if (job == "rg") {
+      probs <- data.frame(f1 = character(0))
+      pred <- predict(model, train_data, type = "vector")
+      cf <- data.frame(f1 = character(0))
+    } else {
+      # do nothing
+    }
+  } else {
+    
+  }
+
+  res <- list(
+    prob = probs,
+    pred = pred,
+    accr = sum(as.numeric(pred == label), na.rm = TRUE)/length(pred),
+    na_pred = sum(as.numeric(is.na(pred)))/length(pred),
+    cf = cf$table
+  )
+  return(res)
+}
+
+##
+# Save prediction
+##
+SavePrediction <- function(df, output_dir, name, flag){
+  if(flag){
+    CreateDirIfNotExist(paste0(output_dir, "/Prediction"))
+    write.csv(df, file = paste0(
+      output_dir, "/Prediction/pred_", name, "_",
+      format(Sys.Date(),"%Y%m%d"),"-",
+      format(Sys.time(),"%H%M%S"),".csv"), row.names = FALSE)
+  }
+}
+
+##
+# Save model
+##
+SaveModel <- function(mdl, output_dir, name, flag){
+  if(flag){
+    CreateDirIfNotExist(paste0(output_dir, "/Model"))
+    save(mdl, file = paste0(output_dir, "/Model/model_", name, "_",
+                            format(Sys.Date(),"%Y%m%d"),"-",
+                            format(Sys.time(),"%H%M%S"),".RData"))
+  }
+}
+
+##
+# Save results
+##
+SaveResults <- function(df, output_dir, name, flag){
+  if(flag){
+    CreateDirIfNotExist(paste0("Output/Text"))
+    write.csv(df, file = paste0("Output/Text/tuning_", name, "_",
+                                format(Sys.Date(),"%Y%m%d"),"-",
+                                format(Sys.time(),"%H%M%S"),
+                                ".csv"), row.names = FALSE) 
+  }
+}
+
+##
+# Prediction old
+##
+PredictMe_old <- function(model, data, label = c(), job, 
+                      model_name = all_models){
+  
+  
   if(caret == TRUE){
     if(job == "bc"){
       probs <- predict(model, data, type = "prob")
@@ -355,7 +469,7 @@ ConnAccess <- function(db_path){
 ##
 ReadDataFromADB <- function(db_path, tbl_name){
   conn <- ConnAccess(db_path)
-  df <- RODBC::sqlFetch(conn, tbl_name)
+  df <- RODBC::sqlFetch(conn, tbl_name, stringsAsFactors = FALSE)
   RODBC::odbcClose(conn)
   return(df)
 }

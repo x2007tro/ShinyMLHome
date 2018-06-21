@@ -10,15 +10,17 @@ dataset <- eventReactive({c(
   a <- ReadDataFromADB(input$cgen_db_path, input$dsu_upload)
   b <- DataInspection(a)
   c <- ReadDataFromADB(input$cgen_db_path, input$cgen_db_tgt_src)
-  d <- ListTblsFromADB(input$cgen_db_path)
+  d <- ReadDataFromADB(input$cgen_db_path, input$cgen_db_tgt_map)
+  e <- ListTblsFromADB(input$cgen_db_path)
   
   # Second, update upload values
-  updateSelectInput(session, "dsu_upload", NULL, choices = d, selected = input$dsu_upload)
+  updateSelectInput(session, "dsu_upload", NULL, choices = e, selected = input$dsu_upload)
   
   res <- list(
     predictors = a,
     specs = b,
-    target = c
+    target = c,
+    target_map = d
   )
   
   return(res)

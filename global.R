@@ -73,6 +73,7 @@ source(paste0(shiny_dir, "Helper/seed.R"))
 source(paste0(shiny_dir, "Model/mtensorflow.R"))
 source(paste0(shiny_dir, "Model/mxgbtree.R"))
 source(paste0(shiny_dir, "Model/mreg.R"))
+source(paste0(shiny_dir, "Model/mdecisiontree.R"))
 
 ##
 # UI parameters
@@ -92,11 +93,31 @@ jt <- c("bc", "mc", "reg")
 bs_pars <- c("kappa", "eps", "nrounds")
 bs_pars_def <- c(1, 0, 10)
 bs_pars_rng <- c("0 - 1 (1)", "0 - 1 (0)", "0 - inf (10)")
-all_models <- c("tensorflow", "xgbtree", "regression")
+#all_models <- c("tensorflow", "xgbtree", "regression")
 image_dim <- c(640, 480)   # width, height
 db_path <- "C:/Users/Ke/OneDrive/Development/Data Science/Projects/Titanic/Dataset/train.accdb"
 db_target_src <- "000_030_Target"
+db_target_map <- "* Input 02 : Target Map *"
 db_predictors_src <- "Predictors R01"
+
+##
+# model parameters
+##
+mdl_db_path <- paste0(shiny_dir, "app.accdb")
+mdl_db_avl_mdls <- "* Input 02 : Available Models *"
+mdl_db_unv_mp <- "* Input 05 : Universal Model Parameters *"
+mdl_db_bs_mp <- "* Input 09 : Bayesian Search Parameters *"
+mdl_db_xgbt_mp <- "* Input 10 : Xgbtree Model Parameters *"
+mdl_db_tf_mp <- "* Input 11 : Tensorflow Model Parameters *"
+mdl_db_dt_mp <- "* Input 13 : Decision Tree Parameters *"
+
+model_output_specs <- ReadDataFromADB(mdl_db_path, mdl_db_avl_mdls)
+all_models <- model_output_specs$model
+unv_pars <- ReadDataFromADB(mdl_db_path, mdl_db_unv_mp)
+bs_pars <- ReadDataFromADB(mdl_db_path, mdl_db_bs_mp)
+xgbt_pars <- ReadDataFromADB(mdl_db_path, mdl_db_xgbt_mp)
+tf_pars <- ReadDataFromADB(mdl_db_path, mdl_db_tf_mp)
+dt_pars <- ReadDataFromADB(mdl_db_path, mdl_db_dt_mp)
 
 ##
 # Parameters for data panel
@@ -121,6 +142,12 @@ xgbt_pars_rng <- c("0 - 1 (0.3)", "0 - inf (6)", "0 - inf (0)", "0 - inf (1)",
                    "0 - 1 (1)", "0 - 1 (1)", "0 - inf (300)")
 xgbt_pars_hint <- c("0.01 - 0.2", "3 - 10", "", "", 
                    "0.5 - 1", "0.5 - 1", "")
+
+##
+# Parameters for decision tree
+##
+dectree_pars <- c("max_depth", "min_child_weight", "cp", "prune")
+dectree_pars_def <- c(30, 20, 0.01, 1)
 
 ##
 # Parameters for model ensemble
