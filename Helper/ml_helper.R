@@ -6,10 +6,11 @@ DataInspection <- function(dataset){
     max_row <- nrow(dataset)
     subset <- dataset[,i]
     cls <- class(subset)[1]
+    if(cls == "numeric"){ subset <- round(subset, 2) }
     has_val <- min(length(subset[subset!=""]),
                    length(subset[!is.na(subset)]))
     no_val <- max_row - has_val
-    vals <- paste0(unique(subset)[1:min(length(unique(subset)), 10)], collapse = ",")
+    vals <- paste0(paste0(unique(subset)[1:min(length(unique(subset)), 10)], collapse = ","), "...")
     
     res <- data.frame(feature = colnames(dataset)[i],
                       class = cls,

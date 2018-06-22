@@ -88,8 +88,8 @@ file_dir_field_width <- "700px"
 # General parameters
 ##
 blotter_field_default_width <- "90px"
-def_label <- "Survived"
-jt <- c("bc", "mc", "reg")
+#def_label <- "Survived"
+#jt <- c("bc", "mc", "reg")
 bs_pars <- c("kappa", "eps", "nrounds")
 bs_pars_def <- c(1, 0, 10)
 bs_pars_rng <- c("0 - 1 (1)", "0 - 1 (0)", "0 - inf (10)")
@@ -142,12 +142,6 @@ xgbt_pars_rng <- c("0 - 1 (0.3)", "0 - inf (6)", "0 - inf (0)", "0 - inf (1)",
                    "0 - 1 (1)", "0 - 1 (1)", "0 - inf (300)")
 xgbt_pars_hint <- c("0.01 - 0.2", "3 - 10", "", "", 
                    "0.5 - 1", "0.5 - 1", "")
-
-##
-# Parameters for decision tree
-##
-dectree_pars <- c("max_depth", "min_child_weight", "cp", "prune")
-dectree_pars_def <- c(30, 20, 0.01, 1)
 
 ##
 # Parameters for model ensemble

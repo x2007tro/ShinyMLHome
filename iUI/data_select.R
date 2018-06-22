@@ -2,13 +2,13 @@ tp_data_select <- tabPanel(
   "Selection",
   fluidRow(
     column(
-      tags$h5("FEATURES"),
-      width = 4,
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Features")),
+      width = tp_wid_nar,
       uiOutput("dss_features")
     ),
     column(
-      tags$h5("SAVE"),
-      width = 8,
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Save")),
+      width = tp_wid_hlf,
       tags$div(
         style="padding:0px, margin:0px, height:50%",
         textInput("dss_nname", label = NULL, 
@@ -25,19 +25,19 @@ tp_data_select <- tabPanel(
   br(),
   fluidRow(
     column(
-      tags$h5("PREDICTORS"),
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Predictors")),
       width = tp_wid_wde,
       DT::dataTableOutput("dss_dts")
     )
   ),
   fluidRow(
     column(
-      tags$h5("SPECS"),
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Predictor Specs")),
       width = tp_wid_hlf,
       DT::dataTableOutput("dss_ovw")
     ),
     column(
-      tags$h5("TARGET"),
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Target")),
       width = tp_wid_nar,
       DT::dataTableOutput("dss_lbs")
     )
