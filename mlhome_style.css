@@ -8,6 +8,42 @@ body {
   /*color: #ffffff;*/
   /*background: #000000;*/
 }
+
+/* train result frame wrapper */
+.frame_wrapper {
+  border:0;
+}
+
+.title_wrapper {
+  border:0;
+}
+
+.title_content_lg {
+  height:25px;
+  line-height:25px;
+  padding:0;
+  border:0;
+  margin:0;
+  font-weight:700;
+  color: #fff;
+  background-color: #EB9605;
+}
+
+.title_content_sm {
+  height:20px;
+  line-height:20px;
+  padding:0;
+  border:0;
+  margin:0;
+  font-weight:700;
+  color: #fff;
+  background-color: #777777;
+}
+
+.content_wrapper {
+  border:0;
+}
+
 .nm_fields {
   padding: 0 2px;
   margin: 0;

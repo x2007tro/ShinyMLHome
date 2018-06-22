@@ -2,9 +2,10 @@ tp_model_dectree_train <- tabPanel(
   "Train",
   fluidRow(
     column(
-      tags$h5("PARAMETER"),
+      tags$div(class = "title_wrapper", tags$h5(class = "title_content_lg", "Option")),
       width = tp_wid_nar,
-
+      
+      br(),
       ##
       # load universal parameters for all models
       ##
@@ -18,18 +19,30 @@ tp_model_dectree_train <- tabPanel(
       textOutput("mdtt_run_msg")
     ),
     column(
-      tags$h5("RESULT"),
       width = 12 - tp_wid_nar,
-      DT::dataTableOutput("mdtt_sb"),
+      tags$div(
+        class = "frame_wrapper",
+        tags$div(class = "title_wrapper", tags$h5(class = "title_content_lg", " Score Board")),
+        tags$div(class = "content_wrapper", DT::dataTableOutput("mdtt_sb"))
+      ),
       br(),
-      tags$h5("CONFUSION MATRIX"),
-      uiOutput("mdtt_cfmtx"),
+      tags$div(
+        class = "frame_wrapper",
+        tags$div(class = "title_wrapper", tags$h5(class = "title_content_lg", " Confusion Matrix")),
+        tags$div(class = "content_wrapper", uiOutput("mdtt_cfmtx"))
+      ),
       br(),
-      tags$h5("VARIABLE IMPORTANCE"),
-      uiOutput("mdtt_varimp"),
+      tags$div(
+        class = "frame_wrapper",
+        tags$div(class = "title_wrapper", tags$h5(class = "title_content_lg", " Variable Importance")),
+        tags$div(class = "content_wrapper", uiOutput("mdtt_varimp"))
+      ),
       br(),
-      tags$h5("CP TABLE"),
-      uiOutput("mdtt_cpt")
+      tags$div(
+        class = "frame_wrapper",
+        tags$div(class = "title_wrapper", tags$h5(class = "title_content_lg", " CP Table")),
+        tags$div(class = "content_wrapper", uiOutput("mdtt_cpt"))
+      )
     )
   )
 )

@@ -105,15 +105,7 @@ observeEvent(input$mdtt_run, {
   SaveResults(res$score_board, static_pars$output_dir, mdl_nm, static_pars$save_res)
   
   # step 4. if training run successfully, output
-  if(msg == paste0(mdl_nm, " run failed!")){
-    output$mdtt_sb <- DT::renderDataTable({
-      DT::datatable(
-        res$score_board, 
-        options = list(dom = "t"),
-        rownames = FALSE
-      )
-    })
-  } else {
+  if(msg != paste0(mdl_nm, " run failed!")){
     ##
     # output scoreboard
     ##
@@ -126,7 +118,6 @@ observeEvent(input$mdtt_run, {
         )
       })
     }
-    
     
     ##
     # output confusion matrix only if job = bc
@@ -141,8 +132,9 @@ observeEvent(input$mdtt_run, {
             lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
               column(
                 width = floor(12 * 1/length(cv_sets)),
-                tags$h4(paste0("Parameter set ", ps_id)),
-                tags$h5(paste0("Cross validation set ", cv_id)),
+                tags$div(class = "title_wrapper", 
+                         tags$h6(class = "title_content_sm", 
+                                 paste0("Parameter set ",ps_id," (CV #", cv_id, ")"))),
                 DT::dataTableOutput(paste0(mdl_nm, "_cfm_", ps_id, "_", cv_id))
               )
             }, i, cv_sets) 
@@ -196,8 +188,9 @@ observeEvent(input$mdtt_run, {
             lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
               column(
                 width = floor(12 * 1/length(cv_sets)),
-                tags$h4(paste0("Parameter set ", ps_id)),
-                tags$h5(paste0("Cross validation set ", cv_id)),
+                tags$div(class = "title_wrapper", 
+                         tags$h6(class = "title_content_sm", 
+                                 paste0("Parameter set ",ps_id," (CV #", cv_id, ")"))),
                 DT::dataTableOutput(paste0(mdl_nm, "_vi_", ps_id, "_", cv_id))
               )
             }, i, cv_sets) 
@@ -256,8 +249,9 @@ observeEvent(input$mdtt_run, {
             lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
               column(
                 width = floor(12 * 1/length(cv_sets)),
-                tags$h4(paste0("Parameter set ", ps_id)),
-                tags$h5(paste0("Cross validation set ", cv_id)),
+                tags$div(class = "title_wrapper", 
+                         tags$h6(class = "title_content_sm", 
+                                 paste0("Parameter set ",ps_id," (CV #", cv_id, ")"))),
                 DT::dataTableOutput(paste0(mdl_nm, "_cpt_", ps_id, "_", cv_id))
               )
             }, i, cv_sets) 
@@ -313,8 +307,9 @@ observeEvent(input$mdtt_run, {
                 fluidRow(
                   column(
                     width = 12,
-                    tags$h4(paste0("Parameter set ", ps_id)),
-                    tags$h5(paste0("Cross validation set ", cv_id)),
+                    tags$div(class = "title_wrapper", 
+                             tags$h6(class = "title_content_sm", 
+                                     paste0("Parameter set ",ps_id," (CV #", cv_id, ")"))),
                     plotOutput(paste0(mdl_nm, "_tr_", ps_id, "_", cv_id))
                   )
                 )
