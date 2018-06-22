@@ -28,6 +28,7 @@ if(!("ada" %in% rownames(installed.packages()))) { install.packages("ada") }
 if(!("rpart" %in% rownames(installed.packages()))) { install.packages("rpart") }
 if(!("rpart.plot" %in% rownames(installed.packages()))) { install.packages("rpart.plot") }
 if(!("nnet" %in% rownames(installed.packages()))) { install.packages("nnet") }
+if(!("naivebayes" %in% rownames(installed.packages()))) { install.packages("naivebayes") }
 
 # load libraries
 library(shiny)
@@ -51,6 +52,7 @@ library(ada)
 library(rpart)
 library(rpart.plot) 
 library(nnet)
+library(naivebayes)
 
 # install keras if not installed
 # install_keras(
@@ -74,6 +76,7 @@ source(paste0(shiny_dir, "Model/mtensorflow.R"))
 source(paste0(shiny_dir, "Model/mxgbtree.R"))
 source(paste0(shiny_dir, "Model/mreg.R"))
 source(paste0(shiny_dir, "Model/mdecisiontree.R"))
+source(paste0(shiny_dir, "Model/mnaivebayes.R"))
 
 ##
 # UI parameters
@@ -110,6 +113,7 @@ mdl_db_bs_mp <- "* Input 09 : Bayesian Search Parameters *"
 mdl_db_xgbt_mp <- "* Input 10 : Xgbtree Model Parameters *"
 mdl_db_tf_mp <- "* Input 11 : Tensorflow Model Parameters *"
 mdl_db_dt_mp <- "* Input 13 : Decision Tree Parameters *"
+mdl_db_nb_mp <- "* Input 14 : Naive Bayes Parameters *"
 
 model_output_specs <- ReadDataFromADB(mdl_db_path, mdl_db_avl_mdls)
 all_models <- model_output_specs$model
@@ -118,6 +122,7 @@ bs_pars <- ReadDataFromADB(mdl_db_path, mdl_db_bs_mp)
 xgbt_pars <- ReadDataFromADB(mdl_db_path, mdl_db_xgbt_mp)
 tf_pars <- ReadDataFromADB(mdl_db_path, mdl_db_tf_mp)
 dt_pars <- ReadDataFromADB(mdl_db_path, mdl_db_dt_mp)
+nb_pars <- ReadDataFromADB(mdl_db_path, mdl_db_nb_mp)
 
 ##
 # Parameters for data panel

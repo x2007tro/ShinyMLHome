@@ -150,7 +150,7 @@ CrossValDecTree2 <- function(proj = "",
   res <- purrr::map(all_res,2)
   cv_res <- dplyr::bind_rows(res) 
   cv_res <- cv_res %>% 
-    dplyr::group_by(proj, job) %>% 
+    dplyr::group_by(proj, job, max_depth, min_child_weight, cp, prune) %>% 
     summarise(
       avg_na_perc = mean(na_perc, na.rm = TRUE),
       avg_loss = -1,
@@ -253,6 +253,10 @@ TrainDecTree2 <- function(proj_nm = "",
     proj = mdl_pn,
     spt_id = mdl_si,
     job = mdl_job,
+    max_depth = mdl_pars[1, "max_depth"], 
+    min_child_weight = mdl_pars[1, "min_child_weight"], 
+    cp = mdl_pars[1, "cp"], 
+    prune = mdl_pars[1, "prune"],
     na_perc = valp$na_pred,
     loss = "n/a",
     accuracy = valp$accr,

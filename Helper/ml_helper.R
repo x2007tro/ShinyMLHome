@@ -254,6 +254,27 @@ PredictMe <- function(model, data, label = c(), job,
     } else {
       # do nothing
     }
+  } else if(model_name == "naive_bayes"){
+    # -- naive bayes
+    # if rg, empty data.frame as naive_bayes cannot be used for regression
+    # else, there is prob
+    if(job == "bc" | job == "mc"){
+      probs <- predict(model, data, type = "prob")
+      pred_fac <- predict(model, data, type = "class")
+      pred <- as.character(pred_fac)
+      # if bc, calculate confusion matrix
+      if(job == "bc"){
+        cf <- caret::confusionMatrix(pred_fac, label)
+      } else {
+        cf <- data.frame(f1 = character(0))
+      }
+    } else if (job == "rg") {
+      probs <- data.frame(f1 = character(0))
+      pred <- data.frame(f1 = character(0))
+      cf <- data.frame(f1 = character(0))
+    } else {
+      # do nothing
+    }
   } else {
     
   }
