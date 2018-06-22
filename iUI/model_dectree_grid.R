@@ -1,4 +1,4 @@
-tp_model_dectree_train <- tabPanel(
+tp_model_dectree_grid <- tabPanel(
   "Train",
   fluidRow(
     column(

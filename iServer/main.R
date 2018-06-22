@@ -33,13 +33,22 @@ mainServer <- function(input, output, session) {
   source(paste0(shiny_dir, "iServer/model_regression_train.R"), local = TRUE)
   
   ##############################################################################################################
+  # Naive Bayes model
+  ##############################################################################################################
+  
+  ##
+  # Model regression train
+  ##
+  source(paste0(shiny_dir, "iServer/model_navbay_grid.R"), local = TRUE)
+  
+  ##############################################################################################################
   # Decision tree model
   ##############################################################################################################
   
   ##
   # Model regression train
   ##
-  source(paste0(shiny_dir, "iServer/model_dectree_train.R"), local = TRUE)
+  source(paste0(shiny_dir, "iServer/model_dectree_grid.R"), local = TRUE)
   
   ##############################################################################################################
   # Tensorflow model

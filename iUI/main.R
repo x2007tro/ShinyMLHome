@@ -5,7 +5,8 @@ ui_files <- c("style","data_upload", "data_select", "data_format",
               "model_tensorflow_par", "model_tensorflow_grid", "model_tensorflow_bayesian", "model_tensorflow_test",
               "model_xgbtree_par", "model_xgbtree_grid", "model_xgbtree_bayesian", "model_xgbtree_test",
               "model_regression_train", 
-              "model_dectree_par", "model_dectree_train", "model_dectree_plot",
+              "model_navbay_par", "model_navbay_grid", "model_navbay_plot",
+              "model_dectree_par", "model_dectree_grid", "model_dectree_plot",
               "model_ensemble_data", "model_ensemble_weighted", "model_ensemble_vote", "model_ensemble_cycle",
               "util_png_viewer", "util_corr_viewer",
               "develop", "conf_gen", "conf_tensorflow", "conf_xgbtree")
@@ -33,7 +34,6 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
       tabsetPanel(
         tp_data_upload,
         tp_data_select,
-        #tp_data_add,
         tp_data_format
       )
     ),
@@ -59,7 +59,9 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
         tabPanel(
           "Naive Bayes",
           tabsetPanel(
-
+            tp_model_navbay_par,
+            tp_model_navbay_grid,
+            tp_model_navbay_plot
           )
         ),
         
@@ -72,7 +74,7 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
           "Decision Tree",
           tabsetPanel(
             tp_model_dectree_par,
-            tp_model_dectree_train,
+            tp_model_dectree_grid,
             tp_model_dectree_plot
           )
         ),
