@@ -47,7 +47,7 @@ body {
 .nm_fields {
   padding: 0 2px;
   margin: 0;
-  width: 90px;
+  width: 150px;
   float: left;
 }
 .par_fields {
@@ -59,6 +59,6 @@ body {
 .hint_fields {
   padding: 0 2px;
   margin: 0;
-  width: 90px;
+  width: 150px;
   float: left;
 }

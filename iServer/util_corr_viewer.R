@@ -1,12 +1,15 @@
 ##
 # Handle data setup for correlation viewer
 ##
-corr_data <- reactive({
-  req(input$ucv_upload$datapath)
-  fs <- input$ucv_upload$datapath
-  dsb <- read.csv(fs, header = TRUE, stringsAsFactors = FALSE)
-  
-  
+corr_data <- eventReactive({c(
+  input$ucv_upload,
+  input$dsf_save,
+  input$dss_save
+)}, {
+  dsb1 <- ReadDataFromADB(input$cgen_db_path, input$ucv_upload)
+  dsb2 <- ReadDataFromADB(input$cgen_db_path, input$cgen_db_tgt_src)
+  dsb <- cbind.data.frame(dsb2, dsb1)
+  return(dsb)
 })
 
 ##

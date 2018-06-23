@@ -2,7 +2,7 @@ tp_util_png_viewer <- tabPanel(
   "PNG Viewer",
   fluidRow(
     column(
-      tags$h5("DATASET"),
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Source Data")),
       width = 12,
       fileInput(
         "upv_upload", 

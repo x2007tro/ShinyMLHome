@@ -8,10 +8,10 @@ tp_conf_gen <- tabPanel(
       textInput("cgen_db_path", "access database", value = db_path, width = "700px"),
       textInput("cgen_db_tgt_src", "target table", value = db_target_src, width = "150px"),
       textInput("cgen_db_tgt_map", "target map", value = db_target_map, width = "150px"),
-      textInput("cgen_proj_name", "project name", value = "Titanic", width = "150px"),
-      selectInput("cgen_job_type", "job type", choices = jt, multiple = FALSE, selectize = TRUE, selected = jt[1], width = "150px"),
-      numericInput("cgen_val_size", "validation dataset size", value = 100, width = "150px"),
-      numericInput("cgen_cv_rep", "random validation rep", value = 4, width = "150px")
+      textInput("cgen_proj_name", "project name", value = ini_proj, width = "150px"),
+      selectInput("cgen_job_type", "job type", choices = jt, multiple = FALSE, selectize = TRUE, selected = ini_job, width = "150px"),
+      numericInput("cgen_val_size", "validation dataset size", value = ini_vds, width = "150px"),
+      numericInput("cgen_cv_rep", "random validation rep", value = ini_cvrep, width = "150px")
     )
   )
 )

@@ -2,7 +2,7 @@ tp_model_regression_par <- tabPanel(
   "Parameters",
   fluidRow(
     column(
-      width = tp_wid_hlf,
+      width = 12,
       tags$div(class = "title_wrapper", tags$h5(class = "title_content_lg", " Parameters")),
       lapply(1:nrow(rg_pars), function(i){
         pnm <- paste0("mrgp_", rg_pars[i, "par"])

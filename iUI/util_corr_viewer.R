@@ -3,41 +3,36 @@ tp_util_corr_viewer <- tabPanel(
   fluidRow(
     column(
       width = tp_wid_hlf,
-      tags$h5("DATASET"),
-      fileInput(
-        "ucv_upload", 
-        NULL,
-        multiple = FALSE,
-        accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")
-      )
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Predictors")),
+      selectInput("ucv_upload", NULL, choices = ListTblsFromADB(db_path), selected = db_predictors_src, selectize = TRUE)
     ),
     column(
       width = 12 - tp_wid_hlf,
-      tags$h5("FIELDS"),
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "fields")),
       uiOutput("ucv_features")
     )
   ),
   fluidRow(
     column(
       width = tp_wid_hlf,
-      tags$h5("PEARSON CORR MATRIX"),
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Pearson Correlation Matrix")),
       DT::dataTableOutput("corr_mtx")
     ),
     column(
       width = 12 - tp_wid_hlf,
-      tags$h5("PEARSON CORR MATRIX PLOT"),
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Pearson Correlation Matrix Plot")),
       plotOutput("corr_plot")
     )
   ),
   fluidRow(
     column(
       width = tp_wid_hlf,
-      tags$h5("GK CORR MATRIX"),
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "GK Correlation Matrix")),
       DT::dataTableOutput("gk_corr_mtx")
     ),
     column(
       width = 12 - tp_wid_hlf,
-      tags$h5("GK CORR MATRIX PLOT"),
+      tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "GK Correlation Matrix Plot")),
       plotOutput("gk_corr_plot")
     )
   )

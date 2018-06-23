@@ -86,23 +86,25 @@ tp_wid_nar <- 2
 tp_wid_med <- 4
 tp_wid_hlf <- 6
 tp_wid_wde <- 8
-file_dir_field_width <- "700px"
 
 ##
 # General parameters
 ##
-blotter_field_default_width <- "90px"
-#def_label <- "Survived"
 jt <- c("bc", "mc", "reg")
-bs_pars <- c("kappa", "eps", "nrounds")
-bs_pars_def <- c(1, 0, 10)
-bs_pars_rng <- c("0 - 1 (1)", "0 - 1 (0)", "0 - inf (10)")
-#all_models <- c("tensorflow", "xgbtree", "regression")
 image_dim <- c(640, 480)   # width, height
-db_path <- "C:/Users/Ke/OneDrive/Development/Data Science/Projects/Titanic/Dataset/train.accdb"
+db_path <- paste0(proj_dir, "Dataset/train.accdb") 
+db_par_tbl <- "* Input 01 : Parameters *"
 db_target_src <- "000_030_Target"
 db_target_map <- "* Input 02 : Target Map *"
 db_predictors_src <- "Predictors R01"
+
+##
+# initialize project variable
+global_pars <- ReadDataFromADB(db_path, db_par_tbl)
+ini_proj <- global_pars[1, "Project"]
+ini_job <- global_pars[1, "Job"]
+ini_vds <- global_pars[1, "ValidationDatasetSize"]
+ini_cvrep <- global_pars[1, "CVRep"]
 
 ##
 # model parameters
@@ -136,6 +138,11 @@ ab_pars <- ReadDataFromADB(mdl_db_path, mdl_db_ab_mp)
 format_options <- c("Scale", "OnehotEncoding")
 
 ##
+# Parameters for model ensemble
+##
+med_options <- c("prob", "pred")
+
+##
 # Parameters for tensorflow panel
 ##
 tf_pars <- c("nlayers", "units", "reg_l1", "reg_l2", "drop_rate", "tf_nrounds")
@@ -153,8 +160,3 @@ xgbt_pars_rng <- c("0 - 1 (0.3)", "0 - inf (6)", "0 - inf (0)", "0 - inf (1)",
                    "0 - 1 (1)", "0 - 1 (1)", "0 - inf (300)")
 xgbt_pars_hint <- c("0.01 - 0.2", "3 - 10", "", "", 
                    "0.5 - 1", "0.5 - 1", "")
-
-##
-# Parameters for model ensemble
-##
-med_options <- c("prob", "pred")
