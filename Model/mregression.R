@@ -9,7 +9,7 @@
 ##
 # GridSearch
 ##
-GridSearchDecTree2 <- function(proj = "",
+GridSearchReg2 <- function(proj = "",
                                model_name,
                                dataset,
                                labels,
@@ -41,7 +41,7 @@ GridSearchDecTree2 <- function(proj = "",
       # 3. list of train results for each cross validation
       # 4. list of validation results for each cross validation
       #
-      res <- CrossValDecTree2(proj = gs_proj,
+      res <- CrossValReg2(proj = gs_proj,
                               model_name = model_name,
                               dataset = gs_ds,
                               labels = gs_ls,
@@ -76,7 +76,7 @@ GridSearchDecTree2 <- function(proj = "",
 ##
 # Cross validation
 ##
-CrossValDecTree2 <- function(proj = "",
+CrossValReg2 <- function(proj = "",
                              model_name,
                              dataset,
                              labels,
@@ -127,7 +127,7 @@ CrossValDecTree2 <- function(proj = "",
     # 3. train_result 
     # 4. valdn_result
     #
-    mdl <- TrainDecTree2(proj_nm = cv_proj,
+    mdl <- TrainReg2(proj_nm = cv_proj,
                          model_name,
                          split_id = splt_sd,
                          job = cv_jb,
@@ -150,7 +150,7 @@ CrossValDecTree2 <- function(proj = "",
   res <- purrr::map(all_res,2)
   cv_res <- dplyr::bind_rows(res) 
   cv_res <- cv_res %>% 
-    dplyr::group_by(proj, job, max_depth, min_child_weight, cp, prune) %>% 
+    dplyr::group_by(proj, job, intercept) %>% 
     summarise(
       avg_na_perc = mean(na_perc, na.rm = TRUE),
       avg_loss = -1,
@@ -170,7 +170,7 @@ CrossValDecTree2 <- function(proj = "",
 ##
 # function TrainTF
 ##
-TrainDecTree2 <- function(proj_nm = "",
+TrainReg2 <- function(proj_nm = "",
                           model_name,
                           split_id = 1,
                           job = c("bc", "mc", "rg"),  # binary class., multi class., regression
@@ -221,7 +221,7 @@ TrainDecTree2 <- function(proj_nm = "",
   ##
   # Train decision tree model
   ##
-  mdl <- CoreTrainDecTree2(x = mdl_trds,
+  mdl <- CoreTrainReg2(x = mdl_trds,
                            y = mdl_trl,
                            pars = mdl_pars,
                            job = mdl_job)
@@ -253,10 +253,7 @@ TrainDecTree2 <- function(proj_nm = "",
     proj = mdl_pn,
     spt_id = mdl_si,
     job = mdl_job,
-    max_depth = mdl_pars[1, "max_depth"], 
-    min_child_weight = mdl_pars[1, "min_child_weight"], 
-    cp = mdl_pars[1, "cp"], 
-    prune = mdl_pars[1, "prune"],
+    intercept = mdl_pars[1, "intercept"], 
     na_perc = valp$na_pred,
     loss = "n/a",
     accuracy = valp$accr,
@@ -292,7 +289,7 @@ TrainDecTree2 <- function(proj_nm = "",
 ##
 # Core decision tree train
 ##
-CoreTrainDecTree2 <- function(x, y, x_val, y_val, pars, 
+CoreTrainReg2 <- function(x, y, x_val, y_val, pars, 
                               job = c("bc", "mc", "rg")){
   
   ##
@@ -301,16 +298,15 @@ CoreTrainDecTree2 <- function(x, y, x_val, y_val, pars,
   train_data <- cbind.data.frame(y, x)
   colnames(train_data) <- c("Target", colnames(x))
   fmr <- as.formula(paste("Target","~", paste(colnames(x), collapse="+")))
-  mdl <- rpart::rpart(fmr, data = train_data,
-                      control = rpart::rpart.control(
-                        maxdepth = pars[1, "max_depth"], 
-                        minsplit = pars[1, "min_child_weight"]),
-                        cp = pars[1, "cp"]
-                      )
   
-  if(pars[1, "prune"] == 1){
-    bestcp <- mdl$cptable[which.min(mdl$cptable[,"xerror"]),"CP"]
-    mdl <- rpart::prune(mdl, cp = bestcp)
+  if(job == "bc"){
+    mdl <- glm(fmr, data = train_data, family = binomial())
+  } else if(job == "mc"){
+    mdl <- nnet::multinom(fmr, data = train_data, Hess = TRUE, model = TRUE)    # Needs scale
+  } else if (job == "rg"){
+    mdl <- lm(fmr, data = train_data)
+  } else {
+    print("Error: undefined training job type!")
   }
   
   return(mdl)

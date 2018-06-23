@@ -30,7 +30,7 @@ mainServer <- function(input, output, session) {
   ##
   # Model regression train
   ##
-  source(paste0(shiny_dir, "iServer/model_regression_train.R"), local = TRUE)
+  source(paste0(shiny_dir, "iServer/model_regression_grid.R"), local = TRUE)
   
   ##############################################################################################################
   # Naive Bayes model

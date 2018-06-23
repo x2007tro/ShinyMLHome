@@ -275,6 +275,38 @@ PredictMe <- function(model, data, label = c(), job,
     } else {
       # do nothing
     }
+  } else if(model_name == "regression"){
+    # -- regression
+    # if rg, no probability
+    # else, there is prob
+    if(job == "bc"){
+      ##
+      # manipulate probs matrix
+      prob <- predict(model, data, type = "response")
+      probs <- data.frame(x1 = 1 - prob, x2 = prob)
+      colnames(probs) <- levels(label)
+      
+      ##
+      # manipulate pred vector
+      pred <- prob
+      pred[pred <= 0.5] <- levels(label)[1]
+      pred[pred > 0.5] <- levels(label)[2]
+      pred_fac <- as.factor(pred)
+      
+      ##
+      # confusion matrix
+      cf <- caret::confusionMatrix(pred_fac, label)
+    } else if (job == "mc") {
+      probs <- predict(model, data, type = "raw")   # might need special treatment later
+      pred_fac <- predict(model, data, type = "class")
+      pred <- as.character(pred_fac)
+    } else if (job == "rg") {
+      probs <- data.frame(f1 = character(0))
+      pred <- predict(model, train_data, type = "response")
+      cf <- data.frame(f1 = character(0))
+    } else {
+      # do nothing
+    }
   } else {
     
   }

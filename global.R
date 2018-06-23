@@ -74,7 +74,7 @@ source(paste0(shiny_dir, "Helper/ml_helper.R"))
 source(paste0(shiny_dir, "Helper/seed.R"))
 source(paste0(shiny_dir, "Model/mtensorflow.R"))
 source(paste0(shiny_dir, "Model/mxgbtree.R"))
-source(paste0(shiny_dir, "Model/mreg.R"))
+source(paste0(shiny_dir, "Model/mregression.R"))
 source(paste0(shiny_dir, "Model/mdecisiontree.R"))
 source(paste0(shiny_dir, "Model/mnaivebayes.R"))
 
@@ -110,8 +110,9 @@ mdl_db_path <- paste0(shiny_dir, "app.accdb")
 mdl_db_avl_mdls <- "* Input 02 : Available Models *"
 mdl_db_unv_mp <- "* Input 05 : Universal Model Parameters *"
 mdl_db_bs_mp <- "* Input 09 : Bayesian Search Parameters *"
-mdl_db_xgbt_mp <- "* Input 10 : Xgbtree Model Parameters *"
-mdl_db_tf_mp <- "* Input 11 : Tensorflow Model Parameters *"
+mdl_db_xgbt_mp <- "* Input 10 : Xgbtree Parameters *"
+mdl_db_tf_mp <- "* Input 11 : Tensorflow Parameters *"
+mdl_db_rg_mp <- "* Input 12 : Regression Parameters *"
 mdl_db_dt_mp <- "* Input 13 : Decision Tree Parameters *"
 mdl_db_nb_mp <- "* Input 14 : Naive Bayes Parameters *"
 
@@ -123,6 +124,7 @@ xgbt_pars <- ReadDataFromADB(mdl_db_path, mdl_db_xgbt_mp)
 tf_pars <- ReadDataFromADB(mdl_db_path, mdl_db_tf_mp)
 dt_pars <- ReadDataFromADB(mdl_db_path, mdl_db_dt_mp)
 nb_pars <- ReadDataFromADB(mdl_db_path, mdl_db_nb_mp)
+rg_pars <- ReadDataFromADB(mdl_db_path, mdl_db_rg_mp)
 
 ##
 # Parameters for data panel

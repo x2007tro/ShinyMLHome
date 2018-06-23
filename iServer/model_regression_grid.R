@@ -1,7 +1,7 @@
-observeEvent(input$mnbg_run, {
+observeEvent(input$mrgg_run, {
   ##
   # first thing first
-  mdl_nm <- "naive_bayes"
+  mdl_nm <- "regression"
   score_board_opt <- model_output_specs[model_output_specs$model == mdl_nm, "score_board"]
   conf_mtrx_opt <- model_output_specs[model_output_specs$model == mdl_nm, "conf_mtrx"]
   var_imp_opt <- model_output_specs[model_output_specs$model == mdl_nm, "var_imp"]
@@ -18,16 +18,16 @@ observeEvent(input$mnbg_run, {
   )
   
   # step 2. model specific parameters
-  res <- lapply(1:nrow(nb_pars), function(i){
-    pnm <- paste0("mnbp_", nb_pars[i, "par"])
+  res <- lapply(1:nrow(rg_pars), function(i){
+    pnm <- paste0("mrgp_", rg_pars[i, "par"])
     res <- CreateParRange("grid", input[[paste0(pnm, "_beg")]], input[[paste0(pnm, "_end")]], input[[paste0(pnm, "_inc")]])
   })
-  names(res) <- nb_pars$par
+  names(res) <- rg_pars$par
   tuning_pars <- expand.grid(res)
   
   # step 3. universal model parameters
   static_pars <- lapply(1:nrow(unv_pars), function(i){
-    res <- input[[paste0("mnbg_", unv_pars[i, "par"])]]
+    res <- input[[paste0("mrgg_", unv_pars[i, "par"])]]
     ifelse(res == "y", TRUE, FALSE)
   })
   names(static_pars) <- unv_pars$par
@@ -37,7 +37,7 @@ observeEvent(input$mnbg_run, {
     message = paste0(mdl_nm, " train in progress. "),
     detail = 'This may take a while ...', value = 0, {
       tuning_res <- tryCatch({
-        br <- GridSearchNavBay2(
+        br <- GridSearchReg2(
           proj = input$cgen_proj_name,
           model_name = mdl_nm,
           dataset = fmtd_data$predictors,
@@ -110,7 +110,7 @@ observeEvent(input$mnbg_run, {
     # output scoreboard
     ##
     if(score_board_opt) {
-      output$mnbg_sb <- DT::renderDataTable({
+      output$mrgg_sb <- DT::renderDataTable({
         DT::datatable(
           res$score_board, 
           options = list(dom = "t"),
@@ -125,7 +125,7 @@ observeEvent(input$mnbg_run, {
     if(conf_mtrx_opt & input$cgen_job_type == "bc"){
       ##
       # first create output objects
-      output$mnbg_cfmtx <- renderUI({
+      output$mrgg_cfmtx <- renderUI({
         opt <- lapply(1:length(res$train_results), function(i){
           cv_sets <- res$train_results[[i]]
           fluidRow(
@@ -181,7 +181,7 @@ observeEvent(input$mnbg_run, {
     if(var_imp_opt){
       ##
       # first create output objects
-      output$mnbg_varimp <- renderUI({
+      output$mrgg_varimp <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -242,7 +242,7 @@ observeEvent(input$mnbg_run, {
     if(cp_table_opt){
       ##
       # first create output objects
-      output$mnbg_cpt <- renderUI({
+      output$mrgg_cpt <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -297,7 +297,7 @@ observeEvent(input$mnbg_run, {
     if(tree_plot_opt){
       ##
       # first create output objects
-      output$mnbp_orig <- renderUI({
+      output$mrgp_orig <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -334,8 +334,7 @@ observeEvent(input$mnbg_run, {
               mdl <- cv_sets[[cv_id]]
               ##
               # present meat
-              n_fea <- ncol(fmtd_data$predictors)
-              par(mfrow = c(ceiling(n_fea/5), 5))
+              par(mfrow=c(1, ncol(fmtd_data$predictors)))
               plot(mdl, ask = FALSE)
             })
           }, i, cv_sets)
@@ -347,7 +346,7 @@ observeEvent(input$mnbg_run, {
   ##
   # step 5. output run message
   ##
-  output$mnbg_run_msg <- renderText({
+  output$mrgg_run_msg <- renderText({
     msg
   })
   

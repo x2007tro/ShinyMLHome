@@ -2,7 +2,7 @@ tp_model_dectree_par <- tabPanel(
   "Parameters",
   fluidRow(
     column(
-      width = tp_wid_hlf - 1,
+      width = tp_wid_hlf,
       tags$div(class = "title_wrapper", tags$h5(class = "title_content_lg", " Parameters")),
       lapply(1:nrow(dt_pars), function(i){
         pnm <- paste0("mdtp_", dt_pars[i, "par"])
