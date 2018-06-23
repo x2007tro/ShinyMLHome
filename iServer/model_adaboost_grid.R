@@ -8,6 +8,7 @@ observeEvent(input$mabg_run, {
   tree_plot_opt <- model_output_specs[model_output_specs$model == mdl_nm, "tree_plot"]
   cp_table_opt <- model_output_specs[model_output_specs$model == mdl_nm, "cp_table"]
   lc_plot_opt <- model_output_specs[model_output_specs$model == mdl_nm, "learning_curve_plot"]
+  tree_pick_ipt <- model_output_specs[model_output_specs$model == mdl_nm, "tree_pick_input"]
   
   # step 1. data formatting
   fmtd_data <- FormatData4Model(
@@ -293,6 +294,23 @@ observeEvent(input$mabg_run, {
     }
     
     ##
+    # Model specific input - tree pick
+    ##
+    if(tree_pick_ipt){
+      output$mabp_tree_pick <- renderUI({
+        ##
+        # determine max num of trees
+        max_num_tree <- min(tuning_pars$nrounds, na.rm = TRUE)
+        print(max_num_tree)
+        ##
+        # output ui component
+        selectInput("tree_pick_id", label = "random tree printed", choices = 1:max_num_tree,
+                    selected = sample.int(max_num_tree, 1), multiple = FALSE, selectize = TRUE,
+                    width = "50px")
+      })
+    }
+    
+    ##
     # Model specific output - tree plot
     ##
     if(tree_plot_opt){
@@ -332,7 +350,7 @@ observeEvent(input$mabg_run, {
             output[[paste0(mdl_nm, "_tr_", ps_id, "_", cv_id)]] <- renderPlot({
               ##
               # produce meat (modify)
-              mdl <- cv_sets[[cv_id]]$model$trees[[1]]
+              mdl <- cv_sets[[cv_id]]$model$trees[[input$tree_pick_id]]
               ##
               # present meat
               rpart.plot::rpart.plot(mdl, faclen = -1, type = 4, extra = "auto", 
