@@ -7,6 +7,7 @@ ui_files <- c("data_upload", "data_select", "data_format",
               "model_regression_par", "model_regression_grid", 
               "model_navbay_par", "model_navbay_grid", "model_navbay_plot",
               "model_dectree_par", "model_dectree_grid", "model_dectree_plot",
+              "model_adaboost_par", "model_adaboost_grid", "model_adaboost_bayesian", "model_adaboost_plot",
               "model_ensemble_data", "model_ensemble_weighted", "model_ensemble_vote", "model_ensemble_cycle",
               "util_png_viewer", "util_corr_viewer",
               "develop", "conf_gen", "conf_tensorflow", "conf_xgbtree")
@@ -58,7 +59,7 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
         ),
         # Naive Bayes model
         tabPanel(
-          "Naive Bayes",
+          "Naive Bayes (bc and mc)",
           tabsetPanel(
             tp_model_navbay_par,
             tp_model_navbay_grid,
@@ -79,16 +80,19 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
             tp_model_dectree_plot
           )
         ),
+        # Adaptive Boost
+        tabPanel(
+          "Adapative Boosting (bc only)",
+          tabsetPanel(
+            tp_model_adaboost_par,
+            tp_model_adaboost_grid,
+            #tp_model_adaboost_bayesian,
+            tp_model_adaboost_plot
+          )
+        ),
         # Random Forest
         tabPanel(
           "Random Forest",
-          tabsetPanel(
-            
-          )
-        ),
-        # Adaptive Boost
-        tabPanel(
-          "Adapative Boosting",
           tabsetPanel(
             
           )

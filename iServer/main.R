@@ -51,6 +51,20 @@ mainServer <- function(input, output, session) {
   source(paste0(shiny_dir, "iServer/model_dectree_grid.R"), local = TRUE)
   
   ##############################################################################################################
+  # ada boost model
+  ##############################################################################################################
+  
+  ##
+  # Adaboost grid Search
+  ##
+  source(paste0(shiny_dir, "iServer/model_adaboost_grid.R"), local = TRUE)
+  
+  ##
+  # Adaboost bayesian Search
+  ##
+  source(paste0(shiny_dir, "iServer/model_adaboost_bayesian.R"), local = TRUE)
+  
+  ##############################################################################################################
   # Tensorflow model
   ##############################################################################################################
   

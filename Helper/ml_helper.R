@@ -307,6 +307,28 @@ PredictMe <- function(model, data, label = c(), job,
     } else {
       # do nothing
     }
+  } else if(model_name == "ada_boost"){
+    # -- ada boost
+    # if rg, not available
+    # else, there is prob
+    if(job == "bc"){
+      ##
+      # computer probability and prediction
+      probs <- predict(model, data, type = "prob")
+      probs <- as.data.frame(probs)
+      colnames(probs) <- levels(label)
+      pred_fac <- predict(model, data, type = "vector")
+      pred <- as.character(pred_fac)
+      
+      ##
+      # confusion matrix
+      cf <- caret::confusionMatrix(pred_fac, label)
+    } else {
+      print("Only bc is supported for Adapative Boosting!")
+      probs <- data.frame(f1 = character(0))
+      pred <- data.frame(f1 = character(0))
+      cf <- data.frame(f1 = character(0))
+    }
   } else {
     
   }

@@ -77,6 +77,7 @@ source(paste0(shiny_dir, "Model/mxgbtree.R"))
 source(paste0(shiny_dir, "Model/mregression.R"))
 source(paste0(shiny_dir, "Model/mdecisiontree.R"))
 source(paste0(shiny_dir, "Model/mnaivebayes.R"))
+source(paste0(shiny_dir, "Model/madaboost.R"))
 
 ##
 # UI parameters
@@ -92,7 +93,7 @@ file_dir_field_width <- "700px"
 ##
 blotter_field_default_width <- "90px"
 #def_label <- "Survived"
-#jt <- c("bc", "mc", "reg")
+jt <- c("bc", "mc", "reg")
 bs_pars <- c("kappa", "eps", "nrounds")
 bs_pars_def <- c(1, 0, 10)
 bs_pars_rng <- c("0 - 1 (1)", "0 - 1 (0)", "0 - inf (10)")
@@ -115,6 +116,7 @@ mdl_db_tf_mp <- "* Input 11 : Tensorflow Parameters *"
 mdl_db_rg_mp <- "* Input 12 : Regression Parameters *"
 mdl_db_dt_mp <- "* Input 13 : Decision Tree Parameters *"
 mdl_db_nb_mp <- "* Input 14 : Naive Bayes Parameters *"
+mdl_db_ab_mp <- "* Input 15 : Adaptive Boosting Parameters *"
 
 model_output_specs <- ReadDataFromADB(mdl_db_path, mdl_db_avl_mdls)
 all_models <- model_output_specs$model
@@ -125,6 +127,8 @@ tf_pars <- ReadDataFromADB(mdl_db_path, mdl_db_tf_mp)
 dt_pars <- ReadDataFromADB(mdl_db_path, mdl_db_dt_mp)
 nb_pars <- ReadDataFromADB(mdl_db_path, mdl_db_nb_mp)
 rg_pars <- ReadDataFromADB(mdl_db_path, mdl_db_rg_mp)
+ab_pars <- ReadDataFromADB(mdl_db_path, mdl_db_ab_mp)
+
 
 ##
 # Parameters for data panel
