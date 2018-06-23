@@ -7,6 +7,84 @@
 ##
 
 ##
+# BayesianSearch
+##
+BayesianSearchAdaBoost2 <- function(proj = "",
+                              model_name,
+                              dataset,
+                              labels,
+                              job = c("bc", "mc", "rg"),
+                              sd = 0,   # 0 means no control over tf results
+                              val_size = 100,
+                              cv_rep = 5,
+                              mdl_pars,
+                              stc_pars,
+                              bs_pars){
+  # assign local variables
+  bs_proj <- proj
+  bs_ds <- dataset   # used
+  bs_ls <- labels   # used
+  bs_jb <- match.arg(job)   # used
+  bs_sd <- sd    # used
+  bs_val_sz <- val_size   # used
+  bs_cv_rep <- cv_rep   # used
+  
+  # define optimization function
+  BsOpUtil <- function(max_depth, min_child_weight, cp, bag_frac, nu, nrounds){
+    ##
+    # create parameter
+    mdl_pars_bayesian <- data.frame(
+      max_depth = max_depth,
+      min_child_weight = min_child_weight,
+      cp = cp,
+      bag_frac = bag_frac,
+      nu = nu,
+      nrounds = nrounds,
+      stringsAsFactors = FALSE
+    )
+    
+    ##
+    # run cv main algorithm
+    tr_res <- CrossValAdaBoost2(
+      proj = paste0(bs_proj,"-","bayesian"),
+      model_name = model_name,
+      dataset = bs_ds,
+      labels = bs_ls,
+      job = bs_jb,
+      n = 1,
+      val_size = bs_val_sz,
+      cv_rep = bs_cv_rep,
+      mdl_pars = mdl_pars_bayesian,
+      stc_pars = stc_pars)
+                          
+    acc <- mean(tr_res$score_board$avg_acc, na.rm = TRUE)  # alough only one row
+    
+    return(list(Score = acc, Pred = 0))
+  }
+  
+  # fit bayesian function
+  if(length(mdl_pars) != 0){
+    set.seed(1111)
+    res <- rBayesianOptimization::BayesianOptimization(
+      FUN = BsOpUtil,
+      bounds = mdl_pars,
+      init_grid_dt = bs_pars$ini_grid, 
+      init_points = 2, 
+      n_iter = bs_pars$nrounds,
+      acq = "ucb", 
+      kappa = bs_pars$kappa, 
+      eps = bs_pars$eps,
+      verbose = TRUE
+    )
+    res <- res$History
+  } else {
+    print("Warning: parameters tuning list is empty for bayesian search!")
+    res <- data.frame(f1=character(0))
+  }
+  return(res)
+}
+
+##
 # GridSearch
 ##
 GridSearchAdaBoost2 <- function(proj = "",
@@ -307,6 +385,7 @@ CoreTrainAdaBoost2 <- function(x, y, x_val, y_val, pars,
   colnames(train_data) <- c("Target", colnames(x))
   fmr <- as.formula(paste("Target","~", paste(colnames(x), collapse="+")))
   
+  set.seed(1111)
   mdl <- ada::ada(formula = fmr, data = train_data, type = "discrete", 
                   iter = pars[1, "nrounds"], 
                   nu = pars[1, "nu"], 

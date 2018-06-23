@@ -34,7 +34,6 @@ To add a new model, do the following steps:
 9. Update ./iUI/model_xxx_bayesian.R (if applicable)
     + update the tab object name - tp_model_xxx_bayesian
     + update the ui component name - mxxxb
-    + add/remove ui output depending on the model
 10. Update ./iUI/model_xxx_plot.R (if applicable)
     + update the ui component name - mxxxb
     + add/remove ui output depending on the model
@@ -44,6 +43,10 @@ To add a new model, do the following steps:
     + replace the model part of the function names
     + update score_board related codes (two places) to include model specific parameters
     + update function CoreTrainxxx2 for specific model
+    + update bayesian search for specic model
+        + update input parameters for function BsOpUtil
+        + update field names for data.frame mdl_pars_bayesian
+        
 11. Update ./Helper/ml_helper.R (It might be very easy to do, refer to package pdf)
     + update function PredictMe
     + update function FormatData4Model
@@ -53,4 +56,9 @@ To add a new model, do the following steps:
     + update model name parameter - mdl_nm
     + update the parameter variable name - xxx_pars
     + update the ui component name - mxxxg/p
+    + replace GridSearchxxx2 with new model name
+13. Update ./iServer/model_xxx_bayesian.R (if applicable)
+    + update model name parameter - mdl_nm
+    + update the parameter variable name - xxx_pars
+    + update the ui component name - mxxxb/p
     + replace GridSearchxxx2 with new model name

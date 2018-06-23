@@ -86,7 +86,7 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
           tabsetPanel(
             tp_model_adaboost_par,
             tp_model_adaboost_grid,
-            #tp_model_adaboost_bayesian,
+            tp_model_adaboost_bayesian,
             tp_model_adaboost_plot
           )
         ),
