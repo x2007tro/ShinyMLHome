@@ -1,4 +1,4 @@
-observeEvent(input$mabg_run, {
+observeEvent(input$mabb_run, {
   ##
   # first thing first
   mdl_nm <- "ada_boost"

@@ -212,12 +212,25 @@ observeEvent(input$mabg_run, {
             output[[paste0(mdl_nm, "_vi_", ps_id, "_", cv_id)]] <- DT::renderDataTable({
               ##
               # produce meat (modify)
-              mdl_var_imp <- cv_sets[[cv_id]]$model$trees[[1]]$variable.importance
+              trees <- cv_sets[[cv_id]]$model$trees
+              for(i in 1:length(trees)){
+                mdl_var_imp <- trees[[i]]$variable.importance
+                var_imp_df <- data.frame(
+                  variable = names(mdl_var_imp),
+                  importance = round(mdl_var_imp, 10),
+                  stringsAsFactors = FALSE
+                )
+                if(i == 1){
+                  raw_meat <- var_imp_df
+                } else {
+                  raw_meat <- dplyr::full_join(raw_meat, var_imp_df, by = "variable")
+                }
+              }
               meat <- data.frame(
-                variable = names(mdl_var_imp),
-                importance = round(mdl_var_imp, 2),
+                variable = raw_meat$variable,
+                avg_imp = round(rowMeans(raw_meat[,-1], na.rm = TRUE), 2),
                 stringsAsFactors = FALSE
-              ) 
+              )
               ##
               # present meat
               DT::datatable(meat,
@@ -297,23 +310,27 @@ observeEvent(input$mabg_run, {
     # Model specific input - tree pick
     ##
     if(tree_pick_ipt){
-      output$mabp_tree_pick <- renderUI({
-        ##
-        # determine max num of trees
-        max_num_tree <- min(tuning_pars$nrounds, na.rm = TRUE)
-        print(max_num_tree)
-        ##
-        # output ui component
-        selectInput("tree_pick_id", label = "random tree printed", choices = 1:max_num_tree,
-                    selected = sample.int(max_num_tree, 1), multiple = FALSE, selectize = TRUE,
-                    width = "50px")
-      })
+      # output$mabp_tree_pick <- renderUI({
+      #   ##
+      #   # determine max num of trees
+      #   max_num_tree <- min(tuning_pars$nrounds, na.rm = TRUE)
+      #   ##
+      #   # output ui component
+      #   selectInput("tree_pick_id", label = "random tree printed", choices = 1:max_num_tree,
+      #               selected = floor(sample.int(max_num_tree, 1)), multiple = FALSE, selectize = TRUE,
+      #               width = "200px")
+      # })
     }
     
     ##
     # Model specific output - tree plot
     ##
     if(tree_plot_opt){
+      ##
+      # generate a random tree id
+      max_num_tree <- min(tuning_pars$nrounds, na.rm = TRUE)
+      tree_id <- sample.int(max_num_tree, 1)
+      
       ##
       # first create output objects
       output$mabp_tree <- renderUI({
@@ -328,7 +345,8 @@ observeEvent(input$mabg_run, {
                     width = 12,
                     tags$div(class = "title_wrapper", 
                              tags$h6(class = "title_content_sm", 
-                                     paste0("Parameter set ",ps_id," (CV #", cv_id, ")"))),
+                                     paste0("Parameter set ",ps_id," (CV #", cv_id, ")",
+                                            " (Tree ", tree_id, ")"))),
                     plotOutput(paste0(mdl_nm, "_tr_", ps_id, "_", cv_id))
                   )
                 )
@@ -350,11 +368,61 @@ observeEvent(input$mabg_run, {
             output[[paste0(mdl_nm, "_tr_", ps_id, "_", cv_id)]] <- renderPlot({
               ##
               # produce meat (modify)
-              mdl <- cv_sets[[cv_id]]$model$trees[[input$tree_pick_id]]
+              rpart_tree <- cv_sets[[cv_id]]$model$trees[[tree_id]]
               ##
               # present meat
-              rpart.plot::rpart.plot(mdl, faclen = -1, type = 4, extra = "auto", 
+              rpart.plot::rpart.plot(rpart_tree, faclen = -1, type = 4, extra = "auto", 
                                      fallen.leaves = FALSE, tweak = 1.5)
+            })
+          }, i, cv_sets)
+        })
+      })
+    } 
+    
+    ##
+    # Model specific output - learning curve plot
+    ##
+    if(lc_plot_opt){
+      ##
+      # first create output objects
+      output$mabp_lc <- renderUI({
+        opt <- lapply(1:length(res$models), function(i){
+          cv_sets <- res$models[[i]]
+          fluidRow(
+            column(
+              width = 12,
+              lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
+                fluidRow(
+                  column(
+                    width = 12,
+                    tags$div(class = "title_wrapper", 
+                             tags$h6(class = "title_content_sm", 
+                                     paste0("Parameter set ",ps_id," (CV #", cv_id, ")"))),
+                    plotOutput(paste0(mdl_nm, "_lc_", ps_id, "_", cv_id))
+                  )
+                )
+              }, i, cv_sets)  
+            )
+          )
+        })
+        do.call(tagList, opt)
+      })
+      
+      ##
+      # then render output objects
+      lapply(1:length(res$models), function(i){
+        local({
+          cv_sets <- res$models[[i]]
+          lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
+            ##
+            # render output (modify)
+            output[[paste0(mdl_nm, "_lc_", ps_id, "_", cv_id)]] <- renderPlot({
+              ##
+              # plot the learning curve
+              mdl_lc <- as.data.frame(cv_sets[[cv_id]]$model$errs)
+              mdl_lc$iter <- 1:50
+              FitPlot("AdaBoost", input$cgen_job_type, mdl_lc, 
+                      "iter", "train.err", "test.errs")
             })
           }, i, cv_sets)
         })
