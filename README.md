@@ -61,4 +61,4 @@ To add a new model, do the following steps:
     + update model name parameter - mdl_nm
     + update the parameter variable name - xxx_pars
     + update the ui component name - mxxxb/p
-    + replace GridSearchxxx2 with new model name
+    + replace BayesianSearchxxx2 with new model name

@@ -2,12 +2,13 @@
 # Source all ui files
 ##
 ui_files <- c("data_upload", "data_select", "data_format",
-              "model_tensorflow_par", "model_tensorflow_grid", "model_tensorflow_bayesian", "model_tensorflow_test",
-              "model_xgbtree_par", "model_xgbtree_grid", "model_xgbtree_bayesian", "model_xgbtree_test",
+              #"model_tensorflow_par", "model_tensorflow_grid", "model_tensorflow_bayesian", "model_tensorflow_test",
+              #"model_xgbtree_par", "model_xgbtree_grid", "model_xgbtree_bayesian", "model_xgbtree_test",
               "model_regression_par", "model_regression_grid", 
               "model_navbay_par", "model_navbay_grid", "model_navbay_plot",
               "model_dectree_par", "model_dectree_grid", "model_dectree_plot",
               "model_adaboost_par", "model_adaboost_grid", "model_adaboost_bayesian", "model_adaboost_plot",
+              "model_randomforest_par", "model_randomforest_grid", "model_randomforest_bayesian", "model_randomforest_plot",
               "model_ensemble_data", "model_ensemble_weighted", "model_ensemble_vote", "model_ensemble_cycle",
               "util_png_viewer", "util_corr_viewer",
               "develop", "conf_gen", "conf_tensorflow", "conf_xgbtree")
@@ -94,7 +95,10 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
         tabPanel(
           "Random Forest",
           tabsetPanel(
-            
+            tp_model_randomforest_par,
+            tp_model_randomforest_grid,
+            tp_model_randomforest_bayesian,
+            tp_model_randomforest_plot
           )
         ),
         # GBM H2O
@@ -108,10 +112,9 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
         tabPanel(
           "Extreme Gradient Boosting Tree",
           tabsetPanel(
-            tp_model_xgbtree_par,
-            tp_model_xgbtree_grid,
-            tp_model_xgbtree_bayesian
-            #tp_model_xgbtree_test
+            #tp_model_xgbtree_par,
+            #tp_model_xgbtree_grid,
+            #tp_model_xgbtree_bayesian
           )
         ),
         
@@ -123,10 +126,9 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
           # Tensorflow model
           "Tensorflow",
           tabsetPanel(
-            tp_model_tensorflow_par,
-            tp_model_tensorflow_grid,
-            tp_model_tensorflow_bayesian
-            #tp_model_tensorflow_test
+            #tp_model_tensorflow_par,
+            #tp_model_tensorflow_grid,
+            #tp_model_tensorflow_bayesian
           )
         ),
         tabPanel(

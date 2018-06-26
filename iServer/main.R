@@ -65,18 +65,32 @@ mainServer <- function(input, output, session) {
   source(paste0(shiny_dir, "iServer/model_adaboost_bayesian.R"), local = TRUE)
   
   ##############################################################################################################
+  # random forest model
+  ##############################################################################################################
+  
+  ##
+  # random forest grid Search
+  ##
+  source(paste0(shiny_dir, "iServer/model_randomforest_grid.R"), local = TRUE)
+  
+  ##
+  # random forest bayesian Search
+  ##
+  source(paste0(shiny_dir, "iServer/model_randomforest_bayesian.R"), local = TRUE)
+  
+  ##############################################################################################################
   # Tensorflow model
   ##############################################################################################################
   
   ##
   # Tensorflow grid Search
   ##
-  source(paste0(shiny_dir, "iServer/model_tensorflow_grid.R"), local = TRUE)
+  #source(paste0(shiny_dir, "iServer/model_tensorflow_grid.R"), local = TRUE)
   
   ##
   # Tensorflow bayesian Search
   ##
-  source(paste0(shiny_dir, "iServer/model_tensorflow_bayesian.R"), local = TRUE)
+  #source(paste0(shiny_dir, "iServer/model_tensorflow_bayesian.R"), local = TRUE)
   
   ##############################################################################################################
   # Xgboost tree model
@@ -85,12 +99,12 @@ mainServer <- function(input, output, session) {
   ##
   # Xgbtree grid Search
   ##
-  source(paste0(shiny_dir, "iServer/model_xgbtree_grid.R"), local = TRUE)
+  #source(paste0(shiny_dir, "iServer/model_xgbtree_grid.R"), local = TRUE)
   
   ##
   # Xgbtree bayesian Search
   ##
-  source(paste0(shiny_dir, "iServer/model_xgbtree_bayesian.R"), local = TRUE)
+  #source(paste0(shiny_dir, "iServer/model_xgbtree_bayesian.R"), local = TRUE)
   
   ##############################################################################################################
   # Model ensemble

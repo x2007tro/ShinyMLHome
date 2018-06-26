@@ -1,7 +1,7 @@
-observeEvent(input$mabg_run, {
+observeEvent(input$mrfg_run, {
   ##
   # first thing first
-  mdl_nm <- "ada_boost"
+  mdl_nm <- "random_forest"
   score_board_opt <- model_output_specs[model_output_specs$model == mdl_nm, "score_board"]
   conf_mtrx_opt <- model_output_specs[model_output_specs$model == mdl_nm, "conf_mtrx"]
   var_imp_opt <- model_output_specs[model_output_specs$model == mdl_nm, "var_imp"]
@@ -9,6 +9,8 @@ observeEvent(input$mabg_run, {
   cp_table_opt <- model_output_specs[model_output_specs$model == mdl_nm, "cp_table"]
   lc_plot_opt <- model_output_specs[model_output_specs$model == mdl_nm, "learning_curve_plot"]
   tree_pick_ipt <- model_output_specs[model_output_specs$model == mdl_nm, "tree_pick_input"]
+  cv_plot_opt <- model_output_specs[model_output_specs$model == mdl_nm, "cv_plot"]
+  pd_plot_opt <- model_output_specs[model_output_specs$model == mdl_nm, "partial_dep_plot"]
   
   # step 1. data formatting
   fmtd_data <- FormatData4Model(
@@ -20,16 +22,16 @@ observeEvent(input$mabg_run, {
   )
   
   # step 2. model specific parameters
-  res <- lapply(1:nrow(ab_pars), function(i){
-    pnm <- paste0("mabp_", ab_pars[i, "par"])
+  res <- lapply(1:nrow(rf_pars), function(i){
+    pnm <- paste0("mrfp_", rf_pars[i, "par"])
     res <- CreateParRange("grid", input[[paste0(pnm, "_beg")]], input[[paste0(pnm, "_end")]], input[[paste0(pnm, "_inc")]])
   })
-  names(res) <- ab_pars$par
+  names(res) <- rf_pars$par
   tuning_pars <- expand.grid(res)
   
   # step 3. universal model parameters
   static_pars <- lapply(1:nrow(unv_pars), function(i){
-    res <- input[[paste0("mabg_", unv_pars[i, "par"])]]
+    res <- input[[paste0("mrfg_", unv_pars[i, "par"])]]
     ifelse(res == "y", TRUE, FALSE)
   })
   names(static_pars) <- unv_pars$par
@@ -39,7 +41,7 @@ observeEvent(input$mabg_run, {
     message = paste0(mdl_nm, " train in progress. "),
     detail = 'This may take a while ...', value = 0, {
       tuning_res <- tryCatch({
-        br <- GridSearchAdaBoost2(
+        br <- GridSearchRandomForest2(
           proj = input$cgen_proj_name,
           model_name = mdl_nm,
           dataset = fmtd_data$predictors,
@@ -112,7 +114,7 @@ observeEvent(input$mabg_run, {
     # output scoreboard
     ##
     if(score_board_opt) {
-      output$mabg_sb <- DT::renderDataTable({
+      output$mrfg_sb <- DT::renderDataTable({
         DT::datatable(
           res$score_board, 
           options = list(dom = "t"),
@@ -127,7 +129,7 @@ observeEvent(input$mabg_run, {
     if(conf_mtrx_opt & input$cgen_job_type == "bc"){
       ##
       # first create output objects
-      output$mabg_cfmtx <- renderUI({
+      output$mrfg_cfmtx <- renderUI({
         opt <- lapply(1:length(res$train_results), function(i){
           cv_sets <- res$train_results[[i]]
           fluidRow(
@@ -183,7 +185,7 @@ observeEvent(input$mabg_run, {
     if(var_imp_opt){
       ##
       # first create output objects
-      output$mabg_varimp <- renderUI({
+      output$mrfg_varimp <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -212,23 +214,11 @@ observeEvent(input$mabg_run, {
             output[[paste0(mdl_nm, "_vi_", ps_id, "_", cv_id)]] <- DT::renderDataTable({
               ##
               # produce meat (modify)
-              trees <- cv_sets[[cv_id]]$model$trees
-              for(i in 1:length(trees)){
-                mdl_var_imp <- trees[[i]]$variable.importance
-                var_imp_df <- data.frame(
-                  variable = names(mdl_var_imp),
-                  importance = round(mdl_var_imp, 10),
-                  stringsAsFactors = FALSE
-                )
-                if(i == 1){
-                  raw_meat <- var_imp_df
-                } else {
-                  raw_meat <- dplyr::full_join(raw_meat, var_imp_df, by = "variable")
-                }
-              }
+              imp <- RRF::importance(cv_sets[[cv_id]])
               meat <- data.frame(
-                variable = raw_meat$variable,
-                avg_imp = round(rowMeans(raw_meat[,-1], na.rm = TRUE), 2),
+                variable = rownames(imp),
+                accy_dec = round(imp[,"MeanDecreaseAccuracy"], 2),
+                gini_dec = round(imp[,"MeanDecreaseGini"], 2),
                 stringsAsFactors = FALSE
               )
               ##
@@ -257,7 +247,7 @@ observeEvent(input$mabg_run, {
     if(cp_table_opt){
       ##
       # first create output objects
-      output$mabg_cpt <- renderUI({
+      output$mrfg_cpt <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -310,7 +300,7 @@ observeEvent(input$mabg_run, {
     # Model specific input - tree pick
     ##
     if(tree_pick_ipt){
-      # output$mabp_tree_pick <- renderUI({
+      # output$mrfp_tree_pick <- renderUI({
       #   ##
       #   # determine max num of trees
       #   max_num_tree <- min(tuning_pars$nrounds, na.rm = TRUE)
@@ -333,7 +323,7 @@ observeEvent(input$mabg_run, {
       
       ##
       # first create output objects
-      output$mabp_tree <- renderUI({
+      output$mrfpl_tree <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -385,7 +375,7 @@ observeEvent(input$mabg_run, {
     if(lc_plot_opt){
       ##
       # first create output objects
-      output$mabp_lc <- renderUI({
+      output$mrfpl_lc <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -419,10 +409,117 @@ observeEvent(input$mabg_run, {
             output[[paste0(mdl_nm, "_lc_", ps_id, "_", cv_id)]] <- renderPlot({
               ##
               # plot the learning curve
-              mdl_lc <- as.data.frame(cv_sets[[cv_id]]$model$errs)
-              mdl_lc$iter <- 1:length(cv_sets[[cv_id]]$model$trees)
-              FitPlot("AdaBoost", input$cgen_job_type, mdl_lc, 
-                      "iter", "train.err", "test.errs")
+              err <- cv_sets[[cv_id]]$err.rate
+              xerr <- cv_sets[[cv_id]]$test$err.rate
+              mdl_lc <- data.frame(iter = 1:cv_sets[[cv_id]]$ntree,
+                                   train_err = err[,1], 
+                                   test_err = xerr[,1])
+              FitPlot("Random Forest", input$cgen_job_type, mdl_lc, "iter", "train_err", "test_err")
+            })
+          }, i, cv_sets)
+        })
+      })
+    } 
+    
+    ##
+    # Model specific output - cv plot
+    ##
+    if(cv_plot_opt){
+      ##
+      # first create output objects
+      output$mrfpl_cv <- renderUI({
+        opt <- lapply(1:length(res$cv_results), function(i){
+          cv_sets <- res$cv_results[[i]]
+          fluidRow(
+            column(
+              width = 12,
+              lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
+                fluidRow(
+                  column(
+                    width = 12,
+                    tags$div(class = "title_wrapper", 
+                             tags$h6(class = "title_content_sm", 
+                                     paste0("Parameter set ",ps_id," (CV #", cv_id, ")"))),
+                    plotOutput(paste0(mdl_nm, "_cv_", ps_id, "_", cv_id))
+                  )
+                )
+              }, i, cv_sets)  
+            )
+          )
+        })
+        do.call(tagList, opt)
+      })
+      
+      ##
+      # then render output objects
+      lapply(1:length(res$cv_results), function(i){
+        local({
+          cv_sets <- res$cv_results[[i]]
+          lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
+            ##
+            # render output (modify)
+            output[[paste0(mdl_nm, "_cv_", ps_id, "_", cv_id)]] <- renderPlot({
+              ##
+              # plot the learning curve
+              result <- cv_sets[[cv_id]]
+              plot(result$n.var, result$error.cv, log="x", type="o", lwd=2)
+            })
+          }, i, cv_sets)
+        })
+      })
+    } 
+    
+    ##
+    # Model specific output - partial dependence plot
+    ##
+    if(pd_plot_opt){
+      ##
+      # first create output objects
+      output$mrfpl_pd <- renderUI({
+        opt <- lapply(1:length(res$models), function(i){
+          cv_sets <- res$models[[i]]
+          fluidRow(
+            column(
+              width = 12,
+              lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
+                fluidRow(
+                  column(
+                    width = 12,
+                    tags$div(class = "title_wrapper", 
+                             tags$h6(class = "title_content_sm", 
+                                     paste0("Parameter set ",ps_id," (CV #", cv_id, ")"))),
+                    plotOutput(paste0(mdl_nm, "_pd_", ps_id, "_", cv_id))
+                  )
+                )
+              }, i, cv_sets)  
+            )
+          )
+        })
+        do.call(tagList, opt)
+      })
+      
+      ##
+      # then render output objects
+      lapply(1:length(res$models), function(i){
+        local({
+          cv_sets <- res$models[[i]]
+          lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
+            ##
+            # render output (modify)
+            output[[paste0(mdl_nm, "_pd_", ps_id, "_", cv_id)]] <- renderPlot({
+              ##
+              # plot the partial dependence graph
+              impvar <- fmtd_data$specs$feature
+              
+              n_fea <- ncol(fmtd_data$predictors)
+              par(mfrow = c(ceiling(n_fea/5), 5))
+              
+              #par(mfrow=c(1, 1))
+              for (i in seq_along(impvar)) {
+                RRF::partialPlot(cv_sets[[cv_id]], fmtd_data$predictors, impvar[i], xlab=impvar[i],
+                                 main=paste("Partial Dependence on", impvar[i]),
+                                 ylim=c(30, 70))
+              }
             })
           }, i, cv_sets)
         })
@@ -433,7 +530,7 @@ observeEvent(input$mabg_run, {
   ##
   # step 5. output run message
   ##
-  output$mabg_run_msg <- renderText({
+  output$mrfg_run_msg <- renderText({
     msg
   })
   

@@ -9,7 +9,7 @@
 ##
 # BayesianSearch
 ##
-BayesianSearchAdaBoost2 <- function(proj = "",
+BayesianSearchRandomForest2 <- function(proj = "",
                               model_name,
                               dataset,
                               labels,
@@ -30,23 +30,22 @@ BayesianSearchAdaBoost2 <- function(proj = "",
   bs_cv_rep <- cv_rep   # used
   
   # define optimization function
-  BsOpUtil <- function(max_depth, min_child_weight, cp, bag_frac, nu, nrounds){
+  BsOpUtil <- function(mtry, coef_reg, reg_flag, min_child_weight, max_node, nrounds){
     ##
     # create parameter
     mdl_pars_bayesian <- data.frame(
-      max_depth = floor(max_depth),
+      mtry = floor(mtry),
+      coef_reg = coef_reg,
+      reg_flag = reg_flag,
       min_child_weight = floor(min_child_weight),
-      cp = cp,
-      bag_frac = bag_frac,
-      nu = nu,
+      max_node = floor(max_node),
       nrounds = floor(nrounds),
       stringsAsFactors = FALSE
     )
     
-    
     ##
     # run cv main algorithm
-    tr_res <- CrossValAdaBoost2(
+    tr_res <- CrossValRandomForest2(
       proj = paste0(bs_proj,"-","bayesian"),
       model_name = model_name,
       dataset = bs_ds,
@@ -88,7 +87,7 @@ BayesianSearchAdaBoost2 <- function(proj = "",
 ##
 # GridSearch
 ##
-GridSearchAdaBoost2 <- function(proj = "",
+GridSearchRandomForest2 <- function(proj = "",
                                model_name,
                                dataset,
                                labels,
@@ -120,7 +119,7 @@ GridSearchAdaBoost2 <- function(proj = "",
       # 3. list of train results for each cross validation
       # 4. list of validation results for each cross validation
       #
-      res <- CrossValAdaBoost2(proj = gs_proj,
+      res <- CrossValRandomForest2(proj = gs_proj,
                               model_name = model_name,
                               dataset = gs_ds,
                               labels = gs_ls,
@@ -138,12 +137,14 @@ GridSearchAdaBoost2 <- function(proj = "",
     models <- purrr::map(res2, 2)
     train_results <- purrr::map(res2, 3)
     valdn_results <- purrr::map(res2, 4)
+    cv_results <- purrr::map(res2, 5)
     
     res <- list(
       score_board = score_board,
       models = models,
       train_results = train_results,
-      valdn_results = valdn_results
+      valdn_results = valdn_results,
+      cv_results = cv_results
     )
   } else {
     print("Error: no parameters for tuning!")
@@ -155,7 +156,7 @@ GridSearchAdaBoost2 <- function(proj = "",
 ##
 # Cross validation
 ##
-CrossValAdaBoost2 <- function(proj = "",
+CrossValRandomForest2 <- function(proj = "",
                              model_name,
                              dataset,
                              labels,
@@ -206,7 +207,7 @@ CrossValAdaBoost2 <- function(proj = "",
     # 3. train_result 
     # 4. valdn_result
     #
-    mdl <- TrainAdaBoost2(proj_nm = cv_proj,
+    mdl <- TrainRandomForest2(proj_nm = cv_proj,
                          model_name,
                          split_id = splt_sd,
                          job = cv_jb,
@@ -229,8 +230,8 @@ CrossValAdaBoost2 <- function(proj = "",
   res <- purrr::map(all_res,2)
   cv_res <- dplyr::bind_rows(res) 
   cv_res <- cv_res %>% 
-    dplyr::group_by(proj, job, max_depth, min_leaf_size, min_info_gain2split,
-                    learning_rate, data_subset, num_of_trees) %>% 
+    dplyr::group_by(proj, job, feature_select, min_leaf_size, max_num_of_leaves,
+                    reg_flag, reg_coef, num_of_trees) %>% 
     summarise(
       avg_na_perc = mean(na_perc, na.rm = TRUE),
       avg_loss = -1,
@@ -243,14 +244,15 @@ CrossValAdaBoost2 <- function(proj = "",
     score_board = cv_res,
     model_list = purrr::map(all_res, 1),
     train_res_list = purrr::map(all_res, 3),
-    valdn_res_list = purrr::map(all_res, 4)
+    valdn_res_list = purrr::map(all_res, 4),
+    cv_res_list = purrr::map(all_res, 5)
   ))
 }
 
 ##
 # function TrainTF
 ##
-TrainAdaBoost2 <- function(proj_nm = "",
+TrainRandomForest2 <- function(proj_nm = "",
                           model_name,
                           split_id = 1,
                           job = c("bc", "mc", "rg"),  # binary class., multi class., regression
@@ -301,12 +303,12 @@ TrainAdaBoost2 <- function(proj_nm = "",
   ##
   # Train decision tree model
   ##
-  mdl <- CoreTrainAdaBoost2(x = mdl_trds,
-                            y = mdl_trl,
-                            x_val = mdl_vads,
-                            y_val = mdl_val,
-                            pars = mdl_pars,
-                            job = mdl_job)
+  mdl <- CoreTrainRandomForest2(x = mdl_trds,
+                                y = mdl_trl,
+                                x_val = mdl_vads,
+                                y_val = mdl_val,
+                                pars = mdl_pars,
+                                job = mdl_job)
   ##
   # predict train data - return three/five items
   #
@@ -335,11 +337,11 @@ TrainAdaBoost2 <- function(proj_nm = "",
     proj = mdl_pn,
     spt_id = mdl_si,
     job = mdl_job,
-    max_depth = mdl_pars[1, "max_depth"], 
+    feature_select = mdl_pars[1, "mtry"], 
     min_leaf_size = mdl_pars[1, "min_child_weight"], 
-    min_info_gain2split = mdl_pars[1, "cp"], 
-    learning_rate = mdl_pars[1, "nu"],
-    data_subset = mdl_pars[1, "bag_frac"],
+    max_num_of_leaves = mdl_pars[1, "max_node"], 
+    reg_flag = mdl_pars[1, "reg_flag"],
+    reg_coef = mdl_pars[1, "coef_reg"],
     num_of_trees = mdl_pars[1, "nrounds"],
     na_perc = valp$na_pred,
     loss = "n/a",
@@ -362,12 +364,16 @@ TrainAdaBoost2 <- function(proj_nm = "",
     #                                      format(Sys.time(),"%H%M%S"),".png"))
   }
   
+  # unique for random forest
+  cv_res <- RRF::rrfcv(mdl_trds, mdl_trl, cv.fold=5)
+  
   # create output
   res <- list(
     model = mdl, 
     score_board = sb,
     train_res = trp,
-    valdn_res = valp
+    valdn_res = valp,
+    cv_res = cv_res
   )
   
   return(res)
@@ -376,7 +382,7 @@ TrainAdaBoost2 <- function(proj_nm = "",
 ##
 # Core decision tree train
 ##
-CoreTrainAdaBoost2 <- function(x, y, x_val, y_val, pars, 
+CoreTrainRandomForest2 <- function(x, y, x_val, y_val, pars, 
                               job = c("bc", "mc", "rg")){
   
   ##
@@ -387,16 +393,11 @@ CoreTrainAdaBoost2 <- function(x, y, x_val, y_val, pars,
   fmr <- as.formula(paste("Target","~", paste(colnames(x), collapse="+")))
   
   set.seed(1111)
-  mdl <- ada::ada(formula = fmr, data = train_data, type = "discrete", 
-                  iter = pars[1, "nrounds"], 
-                  nu = pars[1, "nu"], 
-                  bag.frac = pars[1, "bag_frac"], verbose = TRUE,
-                  control = rpart::rpart.control(
-                    maxdepth = pars[1, "max_depth"], 
-                    minsplit = pars[1, "min_child_weight"],
-                    cp = pars[1, "cp"])
-                  )
-  mdl2 <- ada::addtest(mdl, test.x = x_val, test.y = y_val)
+  mdl <- RRF::RRF(
+    formula = fmr, data = train_data, xtest = x_val, ytest = y_val, keep.forest = TRUE, importance = TRUE,
+    mtry = pars[1, "mtry"], nodesize = pars[1, "min_child_weight"], maxnodes = if(pars[1, "max_node"] == 0) NULL else pars[1, "max_node"], 
+    ntree = pars[1, "nrounds"], coefReg = pars[1, "coef_reg"], flagReg = if(pars[1, "reg_flag"] > 0.5) 1 else 0
+  )
   
-  return(mdl2)
+  return(mdl)
 }

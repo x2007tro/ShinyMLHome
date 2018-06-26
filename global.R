@@ -29,6 +29,8 @@ if(!("rpart" %in% rownames(installed.packages()))) { install.packages("rpart") }
 if(!("rpart.plot" %in% rownames(installed.packages()))) { install.packages("rpart.plot") }
 if(!("nnet" %in% rownames(installed.packages()))) { install.packages("nnet") }
 if(!("naivebayes" %in% rownames(installed.packages()))) { install.packages("naivebayes") }
+if(!("randomForest" %in% rownames(installed.packages()))) { install.packages("randomForest") }
+if(!("RRF" %in% rownames(installed.packages()))) { install.packages("RRF") }
 
 # load libraries
 library(shiny)
@@ -53,6 +55,8 @@ library(rpart)
 library(rpart.plot) 
 library(nnet)
 library(naivebayes)
+library(randomForest)
+library(RRF)
 
 # install keras if not installed
 # install_keras(
@@ -78,6 +82,7 @@ source(paste0(shiny_dir, "Model/mregression.R"))
 source(paste0(shiny_dir, "Model/mdecisiontree.R"))
 source(paste0(shiny_dir, "Model/mnaivebayes.R"))
 source(paste0(shiny_dir, "Model/madaboost.R"))
+source(paste0(shiny_dir, "Model/mrandomforest.R"))
 
 ##
 # UI parameters
@@ -86,6 +91,13 @@ tp_wid_nar <- 2
 tp_wid_med <- 4
 tp_wid_hlf <- 6
 tp_wid_wde <- 8
+
+##
+# To be deleted
+## 
+file_dir_field_width <- "200px"
+blotter_field_default_width <- "100px"
+# end of to be deleted
 
 ##
 # General parameters
@@ -97,6 +109,7 @@ db_par_tbl <- "* Input 01 : Parameters *"
 db_target_src <- "000_030_Target"
 db_target_map <- "* Input 02 : Target Map *"
 db_predictors_src <- "Predictors R01"
+
 
 ##
 # initialize project variable
@@ -119,6 +132,7 @@ mdl_db_rg_mp <- "* Input 12 : Regression Parameters *"
 mdl_db_dt_mp <- "* Input 13 : Decision Tree Parameters *"
 mdl_db_nb_mp <- "* Input 14 : Naive Bayes Parameters *"
 mdl_db_ab_mp <- "* Input 15 : Adaptive Boosting Parameters *"
+mdl_db_rf_mp <- "* Input 16 : Random Forest Parameters *"
 
 model_output_specs <- ReadDataFromADB(mdl_db_path, mdl_db_avl_mdls)
 all_models <- model_output_specs$model
@@ -130,7 +144,7 @@ dt_pars <- ReadDataFromADB(mdl_db_path, mdl_db_dt_mp)
 nb_pars <- ReadDataFromADB(mdl_db_path, mdl_db_nb_mp)
 rg_pars <- ReadDataFromADB(mdl_db_path, mdl_db_rg_mp)
 ab_pars <- ReadDataFromADB(mdl_db_path, mdl_db_ab_mp)
-
+rf_pars <- ReadDataFromADB(mdl_db_path, mdl_db_rf_mp)
 
 ##
 # Parameters for data panel
