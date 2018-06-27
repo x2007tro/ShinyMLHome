@@ -61,7 +61,7 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
         ),
         # Naive Bayes model
         tabPanel(
-          "Naive Bayes (bc and mc)",
+          "Naive Bayes",
           tabsetPanel(
             tp_model_navbay_par,
             tp_model_navbay_grid,
@@ -84,7 +84,7 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
         ),
         # Adaptive Boost
         tabPanel(
-          "Adapative Boosting (bc only)",
+          "Adapative Boosting",
           tabsetPanel(
             tp_model_adaboost_par,
             tp_model_adaboost_grid,
