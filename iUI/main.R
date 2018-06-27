@@ -9,6 +9,7 @@ ui_files <- c("data_upload", "data_select", "data_format",
               "model_dectree_par", "model_dectree_grid", "model_dectree_plot",
               "model_adaboost_par", "model_adaboost_grid", "model_adaboost_bayesian", "model_adaboost_plot",
               "model_randomforest_par", "model_randomforest_grid", "model_randomforest_bayesian", "model_randomforest_plot",
+              "model_gbmh2o_par", "model_gbmh2o_grid", "model_gbmh2o_bayesian", "model_gbmh2o_plot",
               "model_ensemble_data", "model_ensemble_weighted", "model_ensemble_vote", "model_ensemble_cycle",
               "util_png_viewer", "util_corr_viewer",
               "develop", "conf_gen", "conf_tensorflow", "conf_xgbtree")
@@ -105,7 +106,10 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
         tabPanel(
           "H2O Gradient Boosting Tree",
           tabsetPanel(
-            
+            tp_model_gbmh2o_par,
+            tp_model_gbmh2o_grid,
+            tp_model_gbmh2o_bayesian,
+            tp_model_gbmh2o_plot
           )
         ),
         # XbgTree model

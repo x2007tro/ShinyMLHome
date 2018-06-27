@@ -31,6 +31,15 @@ if(!("nnet" %in% rownames(installed.packages()))) { install.packages("nnet") }
 if(!("naivebayes" %in% rownames(installed.packages()))) { install.packages("naivebayes") }
 if(!("randomForest" %in% rownames(installed.packages()))) { install.packages("randomForest") }
 if(!("RRF" %in% rownames(installed.packages()))) { install.packages("RRF") }
+##
+# Remove old h2o
+if ("package:h2o" %in% search()) { detach("package:h2o", unload=TRUE) }
+if ("h2o" %in% rownames(installed.packages())) { remove.packages("h2o") }
+#3
+# Next, we download, install and initialize the H2O package for R.
+if(!("h2o" %in% rownames(installed.packages()))) {
+  install.packages("h2o", repos=(c("http://s3.amazonaws.com/h2o-release/h2o/master/1497/R", getOption("repos"))))
+}
 
 # load libraries
 library(shiny)
@@ -57,6 +66,8 @@ library(nnet)
 library(naivebayes)
 library(randomForest)
 library(RRF)
+library(h2o)
+localH2O <- h2o.init()
 
 # install keras if not installed
 # install_keras(
@@ -83,6 +94,8 @@ source(paste0(shiny_dir, "Model/mdecisiontree.R"))
 source(paste0(shiny_dir, "Model/mnaivebayes.R"))
 source(paste0(shiny_dir, "Model/madaboost.R"))
 source(paste0(shiny_dir, "Model/mrandomforest.R"))
+source(paste0(shiny_dir, "Model/mgbmh2o.R"))
+
 
 ##
 # UI parameters
@@ -133,6 +146,7 @@ mdl_db_dt_mp <- "* Input 13 : Decision Tree Parameters *"
 mdl_db_nb_mp <- "* Input 14 : Naive Bayes Parameters *"
 mdl_db_ab_mp <- "* Input 15 : Adaptive Boosting Parameters *"
 mdl_db_rf_mp <- "* Input 16 : Random Forest Parameters *"
+mdl_db_gbm_mp <- "* Input 17 : GBM H2O Parameters *"
 
 model_output_specs <- ReadDataFromADB(mdl_db_path, mdl_db_avl_mdls)
 all_models <- model_output_specs$model
@@ -145,6 +159,7 @@ nb_pars <- ReadDataFromADB(mdl_db_path, mdl_db_nb_mp)
 rg_pars <- ReadDataFromADB(mdl_db_path, mdl_db_rg_mp)
 ab_pars <- ReadDataFromADB(mdl_db_path, mdl_db_ab_mp)
 rf_pars <- ReadDataFromADB(mdl_db_path, mdl_db_rf_mp)
+gbm_pars <- ReadDataFromADB(mdl_db_path, mdl_db_gbm_mp)
 
 ##
 # Parameters for data panel

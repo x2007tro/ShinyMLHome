@@ -59,7 +59,7 @@ gbm <- h2o.gbm(
   seed = 1234,                                                             
   
   ## score every 10 trees to make early stopping reproducible (it depends on the scoring interval)
-  score_tree_interval = 0                                               
+  score_tree_interval = 10                                               
 )
 
 ##

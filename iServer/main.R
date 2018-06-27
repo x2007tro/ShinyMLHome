@@ -79,6 +79,20 @@ mainServer <- function(input, output, session) {
   source(paste0(shiny_dir, "iServer/model_randomforest_bayesian.R"), local = TRUE)
   
   ##############################################################################################################
+  # gbm h2o model
+  ##############################################################################################################
+  
+  ##
+  # GBM h2o grid Search
+  ##
+  source(paste0(shiny_dir, "iServer/model_gbmh2o_grid.R"), local = TRUE)
+  
+  ##
+  # GBM h2o bayesian Search
+  ##
+  source(paste0(shiny_dir, "iServer/model_gbmh2o_bayesian.R"), local = TRUE)
+  
+  ##############################################################################################################
   # Tensorflow model
   ##############################################################################################################
   
