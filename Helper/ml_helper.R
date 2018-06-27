@@ -373,6 +373,7 @@ PredictMe <- function(model, data, label = c(), job,
     }
   } else if(model_name == "xgbtree"){
     # -- xgbtree model
+	label <- as.factor(label)
     if(job == "bc"){
       ##
       # computer probability and prediction
@@ -403,6 +404,42 @@ PredictMe <- function(model, data, label = c(), job,
 	} else if (job == "rg") {
       probs <- data.frame(f1 = character(0))
       pred <- predict(model, data, reshape = FALSE)
+      cf <- data.frame(f1 = character(0))
+    } else {
+      # do nothing
+    }
+  } else if(model_name == "xgbtree"){
+    # -- tensorflow model
+	label <- as.factor(label)
+    if(job == "bc"){
+      ##
+      # computer probability and prediction
+      prob <- keras::predict_proba(model, data)
+      probs <- data.frame(x1 = 1 - prob, x2 = prob)
+      colnames(probs) <- levels(label)
+      
+      ##
+      # manipulate pred vector
+      pred <- keras::predict_classes(model, data)
+      pred_fac <- as.factor(pred)
+	  
+	  ##
+      # confusion matrix
+      cf <- caret::confusionMatrix(pred_fac, label)
+    } else if (job == "mc") {
+	  ##
+      # computer probability and prediction
+      probs <- keras::predict_proba(model, data)
+      colnames(probs) <- levels(label)
+      
+      ##
+      # manipulate pred vector
+      pred <- keras::predict_classes(model, data)
+      pred_fac <- as.factor(pred)
+	  cf <- data.frame(f1 = character(0))
+	} else if (job == "rg") {
+      probs <- data.frame(f1 = character(0))
+      pred <- keras::predict(model, data)
       cf <- data.frame(f1 = character(0))
     } else {
       # do nothing

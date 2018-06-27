@@ -1,7 +1,7 @@
-observeEvent(input$mxgbtg_run, {
+observeEvent(input$mtfg_run, {
   ##
   # first thing first
-  mdl_nm <- "xgbtree"
+  mdl_nm <- "tensorflow"
   score_board_opt <- model_output_specs[model_output_specs$model == mdl_nm, "score_board"]
   conf_mtrx_opt <- model_output_specs[model_output_specs$model == mdl_nm, "conf_mtrx"]
   var_imp_opt <- model_output_specs[model_output_specs$model == mdl_nm, "var_imp"]
@@ -23,16 +23,16 @@ observeEvent(input$mxgbtg_run, {
   )
   
   # step 2. model specific parameters
-  res <- lapply(1:nrow(xgbt_pars), function(i){
-    pnm <- paste0("mxgbtp_", xgbt_pars[i, "par"])
+  res <- lapply(1:nrow(tf_pars), function(i){
+    pnm <- paste0("mtfp_", tf_pars[i, "par"])
     res <- CreateParRange("grid", input[[paste0(pnm, "_beg")]], input[[paste0(pnm, "_end")]], input[[paste0(pnm, "_inc")]])
   })
-  names(res) <- xgbt_pars$par
+  names(res) <- tf_pars$par
   tuning_pars <- expand.grid(res)
   
   # step 3. universal model parameters
   static_pars <- lapply(1:nrow(unv_pars), function(i){
-    res <- input[[paste0("mxgbtg_", unv_pars[i, "par"])]]
+    res <- input[[paste0("mtfg_", unv_pars[i, "par"])]]
     ifelse(res == "y", TRUE, FALSE)
   })
   names(static_pars) <- unv_pars$par
@@ -42,7 +42,7 @@ observeEvent(input$mxgbtg_run, {
     message = paste0(mdl_nm, " train in progress. "),
     detail = 'This may take a while ...', value = 0, {
       tuning_res <- tryCatch({
-        br <- GridSearchXgbtree2(
+        br <- GridSearchTensorflow2(
           proj = input$cgen_proj_name,
           model_name = mdl_nm,
           dataset = fmtd_data$predictors,
@@ -115,7 +115,7 @@ observeEvent(input$mxgbtg_run, {
     # output scoreboard
     ##
     if(score_board_opt) {
-      output$mxgbtg_sb <- DT::renderDataTable({
+      output$mtfg_sb <- DT::renderDataTable({
         DT::datatable(
           res$score_board, 
           options = list(dom = "t"),
@@ -130,7 +130,7 @@ observeEvent(input$mxgbtg_run, {
     if(conf_mtrx_opt & input$cgen_job_type == "bc"){
       ##
       # first create output objects
-      output$mxgbtg_cfmtx <- renderUI({
+      output$mtfg_cfmtx <- renderUI({
         opt <- lapply(1:length(res$train_results), function(i){
           cv_sets <- res$train_results[[i]]
           fluidRow(
@@ -186,7 +186,7 @@ observeEvent(input$mxgbtg_run, {
     if(var_imp_opt){
       ##
       # first create output objects
-      output$mxgbtg_varimp <- renderUI({
+      output$mtfg_varimp <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -243,7 +243,7 @@ observeEvent(input$mxgbtg_run, {
     if(cp_table_opt){
       ##
       # first create output objects
-      output$mxgbtg_cpt <- renderUI({
+      output$mtfg_cpt <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -296,7 +296,7 @@ observeEvent(input$mxgbtg_run, {
     # Model specific input - tree pick
     ##
     if(tree_pick_ipt){
-      # output$mxgbtpl_tree_pick <- renderUI({
+      # output$mtfpl_tree_pick <- renderUI({
       #   ##
       #   # determine max num of trees
       #   max_num_tree <- min(tuning_pars$nrounds, na.rm = TRUE)
@@ -319,7 +319,7 @@ observeEvent(input$mxgbtg_run, {
       
       ##
       # first create output objects
-      output$mxgbtpl_tree <- renderUI({
+      output$mtfpl_tree <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -370,7 +370,7 @@ observeEvent(input$mxgbtg_run, {
     if(lc_plot_opt){
       ##
       # first create output objects
-      output$mxgbtpl_lc <- renderUI({
+      output$mtfpl_lc <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -405,8 +405,10 @@ observeEvent(input$mxgbtg_run, {
               ##
               # plot the learning curve
               mdl <- cv_sets[[cv_id]]
-			  errs <- mdl$evaluation_log
-			  FitPlot("xgboost tree", "Error", errs, "iter", "train_error", "test_error")
+			        met <- mdl$metrics
+			        mdl_lc <- dplyr::bind_cols(met)
+			        mdl_lc$iter <- 1:nrow(mdl_lc)
+			        FitPlot("Tensorflow via Keras", input$cgen_job_type, mdl_lc, "iter", "acc", "val_acc")
             })
           }, i, cv_sets)
         })
@@ -419,7 +421,7 @@ observeEvent(input$mxgbtg_run, {
     if(cv_plot_opt){
       ##
       # first create output objects
-      output$mxgbtpl_cv <- renderUI({
+      output$mtfpl_cv <- renderUI({
         opt <- lapply(1:length(res$cv_results), function(i){
           cv_sets <- res$cv_results[[i]]
           fluidRow(
@@ -467,7 +469,7 @@ observeEvent(input$mxgbtg_run, {
     if(pd_plot_opt){
       ##
       # first create output objects
-      output$mxgbtpl_pd <- renderUI({
+      output$mtfpl_pd <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -525,7 +527,7 @@ observeEvent(input$mxgbtg_run, {
   if(lc_plot_opt){
     ##
     # first create output objects
-    output$mxgbtpl_dn <- renderUI({
+    output$mtfpl_dn <- renderUI({
       opt <- lapply(1:length(res$models), function(i){
         cv_sets <- res$models[[i]]
         fluidRow(
@@ -570,7 +572,7 @@ observeEvent(input$mxgbtg_run, {
   ##
   # step 5. output run message
   ##
-  output$mxgbtg_run_msg <- renderText({
+  output$mtfg_run_msg <- renderText({
     msg
   })
   

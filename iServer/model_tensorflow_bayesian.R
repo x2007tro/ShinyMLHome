@@ -1,7 +1,7 @@
-observeEvent(input$mxgbtb_run, {
+observeEvent(input$mtfb_run, {
   ##
   # first thing first
-  mdl_nm <- "xgbtree"
+  mdl_nm <- "tensorflow"
   score_board_opt <- model_output_specs[model_output_specs$model == mdl_nm, "score_board"]
   conf_mtrx_opt <- model_output_specs[model_output_specs$model == mdl_nm, "conf_mtrx"]
   var_imp_opt <- model_output_specs[model_output_specs$model == mdl_nm, "var_imp"]
@@ -20,11 +20,11 @@ observeEvent(input$mxgbtb_run, {
   )
   
   # step 2.1 model specific parameters
-  res <- lapply(1:nrow(xgbt_pars), function(i){
-    pnm <- paste0("mxgbtp_", xgbt_pars[i, "par"])
+  res <- lapply(1:nrow(tf_pars), function(i){
+    pnm <- paste0("mtfp_", tf_pars[i, "par"])
     res <- CreateParRange("bayesian", input[[paste0(pnm, "_beg")]], input[[paste0(pnm, "_end")]], input[[paste0(pnm, "_inc")]])
   })
-  names(res) <- xgbt_pars$par
+  names(res) <- tf_pars$par
   ##
   # this step differs between grid and bayesian search
   #
@@ -35,11 +35,11 @@ observeEvent(input$mxgbtb_run, {
   ig <- lapply(1:length(tuning_pars), function(i){
     mean(tuning_pars[[i]])
   })
-  names(ig) <- xgbt_pars$par
+  names(ig) <- tf_pars$par
   
   # step 2.3 bayesian model parameters
   bayesian_pars <- lapply(1:nrow(bs_pars), function(i){
-    res <- input[[paste0("mxgbtb_", bs_pars[i, "par"])]]
+    res <- input[[paste0("mtfb_", bs_pars[i, "par"])]]
     ifelse(res == "y", TRUE, FALSE)
   })
   names(bayesian_pars) <- bs_pars$par
@@ -47,7 +47,7 @@ observeEvent(input$mxgbtb_run, {
   
   # step 3. universal model parameters
   static_pars <- lapply(1:nrow(unv_pars), function(i){
-    res <- input[[paste0("mxgbtb_", unv_pars[i, "par"])]]
+    res <- input[[paste0("mtfb_", unv_pars[i, "par"])]]
     ifelse(res == "y", TRUE, FALSE)
   })
   names(static_pars) <- unv_pars$par
@@ -57,7 +57,7 @@ observeEvent(input$mxgbtb_run, {
     message = paste0(mdl_nm, " train in progress. "),
     detail = 'This may take a while ...', value = 0, {
       tuning_res <- tryCatch({
-        br <- BayesianSearchXgbtree2(
+        br <- BayesianSearchTensorflow2(
           proj = input$cgen_proj_name,
           model_name = mdl_nm,
           dataset = fmtd_data$predictors,
@@ -130,7 +130,7 @@ observeEvent(input$mxgbtb_run, {
     ##
     # output scoreboard
     ##
-    output$mxgbtb_sb <- DT::renderDataTable({
+    output$mtfb_sb <- DT::renderDataTable({
       DT::datatable(
         res, 
         options = list(dom = "t"),
@@ -142,7 +142,7 @@ observeEvent(input$mxgbtb_run, {
   ##
   # step 5. output run message
   ##
-  output$mxgbtb_run_msg <- renderText({
+  output$mtfb_run_msg <- renderText({
     msg
   })
   

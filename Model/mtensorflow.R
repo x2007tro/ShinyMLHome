@@ -9,7 +9,7 @@
 ##
 # BayesianSearch
 ##
-BayesianSearchXgbtree2 <- function(proj = "",
+BayesianSearchTensorflow2 <- function(proj = "",
                               model_name,
                               dataset,
                               labels,
@@ -30,25 +30,22 @@ BayesianSearchXgbtree2 <- function(proj = "",
   bs_cv_rep <- cv_rep   # used
   
   # define optimization function
-  BsOpUtil <- function(max_depth, min_child_weight, eta, colsample_bytree, 
-                       subsample, gamma, nrounds, stopping_round){
+  BsOpUtil <- function(nlayers, units, reg_l1, reg_l2, drop_rate, nrounds){
     ##
     # create parameter
     mdl_pars_bayesian <- data.frame(
-      max_depth = floor(max_depth), 
-      min_child_weight = floor(min_child_weight), 
-      eta = eta, 
-      gamma = gamma,
-      subsample = subsample,
-      colsample_bytree = colsample_bytree,
+      nlayers = floor(nlayers), 
+      units = floor(nlayers), 
+      reg_l1 = reg_l1, 
+      reg_l2 = reg_l2,
+      drop_rate = drop_rate,
       nrounds = floor(nrounds),
-      stopping_round = floor(stopping_round),
       stringsAsFactors = FALSE
     )
     
     ##
     # run cv main algorithm
-    tr_res <- CrossValXgbtree2(
+    tr_res <- CrossValTensorflow2(
       proj = paste0(bs_proj,"-","bayesian"),
       model_name = model_name,
       dataset = bs_ds,
@@ -90,7 +87,7 @@ BayesianSearchXgbtree2 <- function(proj = "",
 ##
 # GridSearch
 ##
-GridSearchXgbtree2 <- function(proj = "",
+GridSearchTensorflow2 <- function(proj = "",
                                model_name,
                                dataset,
                                labels,
@@ -122,7 +119,7 @@ GridSearchXgbtree2 <- function(proj = "",
       # 3. list of train results for each cross validation
       # 4. list of validation results for each cross validation
       #
-      res <- CrossValXgbtree2(proj = gs_proj,
+      res <- CrossValTensorflow2(proj = gs_proj,
                               model_name = model_name,
                               dataset = gs_ds,
                               labels = gs_ls,
@@ -157,7 +154,7 @@ GridSearchXgbtree2 <- function(proj = "",
 ##
 # Cross validation
 ##
-CrossValXgbtree2 <- function(proj = "",
+CrossValTensorflow2 <- function(proj = "",
                              model_name,
                              dataset,
                              labels,
@@ -208,7 +205,7 @@ CrossValXgbtree2 <- function(proj = "",
     # 3. train_result 
     # 4. valdn_result
     #
-    mdl <- TrainXgbtree2(proj_nm = cv_proj,
+    mdl <- TrainTensorflow2(proj_nm = cv_proj,
                          model_name,
                          split_id = splt_sd,
                          job = cv_jb,
@@ -231,13 +228,9 @@ CrossValXgbtree2 <- function(proj = "",
   res <- purrr::map(all_res,2)
   cv_res <- dplyr::bind_rows(res) 
   cv_res <- cv_res %>% 
-    dplyr::group_by(proj, job, max_depth, min_leaf_size, learning_rate,
-                    gamma, data_subset, feature_subset,
-                    num_of_trees, early_stop) %>% 
+    dplyr::group_by(proj, job, nlayers, units, reg_l1, reg_l2, drop_rate, nrounds) %>% 
     summarise(
       avg_na_perc = mean(na_perc, na.rm = TRUE),
-      avg_loss = -1,
-      std_loss = -1,
       avg_acc = mean(accuracy, na.rm = TRUE),
       std_acc = ifelse(n() == 1, -1, format(sd(accuracy, na.rm = TRUE), digits = 2))
     )
@@ -253,7 +246,7 @@ CrossValXgbtree2 <- function(proj = "",
 ##
 # function TrainTF
 ##
-TrainXgbtree2 <- function(proj_nm = "",
+TrainTensorflow2 <- function(proj_nm = "",
                           model_name,
                           split_id = 1,
                           job = c("bc", "mc", "rg"),  # binary class., multi class., regression
@@ -304,7 +297,7 @@ TrainXgbtree2 <- function(proj_nm = "",
   ##
   # Train decision tree model
   ##
-  mdl <- CoreTrainXgbtree2(x = mdl_trds,
+  mdl <- CoreTrainTensorflow2(x = mdl_trds,
                                 y = mdl_trl,
                                 x_val = mdl_vads,
                                 y_val = mdl_val,
@@ -338,16 +331,13 @@ TrainXgbtree2 <- function(proj_nm = "",
     proj = mdl_pn,
     spt_id = mdl_si,
     job = mdl_job,
-    max_depth = mdl_pars[1, "max_depth"], 
-    min_leaf_size = mdl_pars[1, "min_child_weight"], 
-    learning_rate = mdl_pars[1, "eta"], 
-    gamma = mdl_pars[1, "gamma"],
-    data_subset = mdl_pars[1, "subsample"],
-    feature_subset = mdl_pars[1, "colsample_bytree"],
-    num_of_trees = mdl_pars[1, "nrounds"],
-    early_stop = mdl_pars[1, "stopping_round"],
+    nlayers = mdl_pars[1, "nlayers"], 
+    units = mdl_pars[1, "units"], 
+    reg_l1 = mdl_pars[1, "reg_l1"], 
+    reg_l2 = mdl_pars[1, "reg_l2"],
+    drop_rate = mdl_pars[1, "drop_rate"],
+    nrounds = mdl_pars[1, "nrounds"],
     na_perc = valp$na_pred,
-    loss = "n/a",
     accuracy = valp$accr,
     stringsAsFactors = FALSE
   )
@@ -381,61 +371,135 @@ TrainXgbtree2 <- function(proj_nm = "",
 ##
 # Core decision tree train
 ##
-CoreTrainXgbtree2 <- function(x, y, x_val, y_val, pars, 
+CoreTrainTensorflow2 <- function(x, y, x_val, y_val, pars, 
                               job = c("bc", "mc", "rg")){
   
   ##
-  # Prepare data
-  ##
-  dm_strain <- xgboost::xgb.DMatrix(data = x, label = y)
-  dm_valdn <- xgboost::xgb.DMatrix(data = x_val, label = y_val)
+  # Assign common parameters
+  ly_n <- pars[1, "nlayers"] 
+  mdl_lr <- 0.001
+  mdl_act <- "relu"
+  mdl_bsz <- 512
   
   ##
-  # set objective function
+  # Construct layer parameters from raw parameter
+    lay_pars <- list()
+    for(j in 1:ly_n){
+      if(j < ly_n){   # input and inner layers
+        res <- list(
+          units = pars[1, "units"], act = mdl_act, 
+		  reg_l1 = pars[1, "reg_l1"], reg_l2 = pars[1, "reg_l2"], drop_rate = pars[1, "drop_rate"]
+        )
+      } else {   # output layers
+        res <- list(
+          units = if(input_jb == "mc") v = length(unique(y)) else v = 1, 
+          act = NA, reg_l1 = NA, reg_l2 = NA, drop_rate = NA   # last layer only uts matters
+        )
+      }
+      lay_pars[[j]] <- res
+    }
+  
   ##
+  # Set activation function
   if(job == "bc"){
-    mdl_lsf <- "binary:logistic"
-  } else if (mdl_job == "mc"){
-    mdl_lsf <- "multi:softprob"
-  } else if (mdl_job == "rg"){
-    mdl_lsf <- "reg:linear"
+    mdl_oply_act <- "sigmoid"
+    mdl_lsf <- "binary_crossentropy"
+  } else if (job == "mc"){
+    mdl_oply_act <- "softmax"
+    mdl_lsf <- "categorical_crossentropy"
+  } else if (job == "rg"){
+    trl_max <- max(y)
+    trl_min <- min(y)
+    if(trl_min >= 0 & trl_max <= 1){
+      mdl_oply_act <- "sigmoid"
+      mdl_lsf <- "binary_crossentropy"
+    } else {
+      mdl_oply_act <- ""
+      mdl_lsf <- "mse"
+    }
   } else {
     print("Error: undefined training job type!")
   }
   
   ##
-  # Train the model
-  ## 
-  mdl_pars <- list(
-    eta = pars[1, "eta"],
-    gamma = pars[1, "gamma"],
-    max_depth = pars[1, "max_depth"],
-    min_child_weight = pars[1, "min_child_weight"],
-    subsample = pars[1, "subsample"],
-    colsample_bytree = pars[1, "colsample_bytree"],
-	nrounds = pars[1, "nrounds"],
-	early_stopping_rounds = pars[1, "stopping_round"]
-  )
+  # Set metrics
+  if(job == "rg") mdl_mtc <- c("mae") else mdl_mtc <- c("accuracy")
   
-  # train model parameters
-  if(mdl_job == "mc"){
-    # Training
-    mdl <- xgboost::xgb.train(params = mdl_pars,
-                              data = dm_strain,
-                              booster = "gbtree",
-                              objective = mdl_lsf,
-                              num_class = length(unique(y)),
-                              watchlist = list(train=dm_strain, test=dm_valdn),
-                              verbose = 1)
+  ##
+  # Start building model
+  mdl <- keras::keras_model_sequential()
+  uts_cln <- c()
+  act_cln <- c()
+  l1_cln <- c()
+  l2_cln <- c()
+  dr_cln <- c()
+  if(nlayers < 2){
+    print("Error: at least two layers are required!")
   } else {
-    # Training
-    mdl <- xgboost::xgb.train(params = mdl_pars,
-                              data = dm_strain,
-                              booster = "gbtree",
-                              objective = mdl_lsf,
-                              watchlist = list(train=dm_strain, test=dm_valdn),
-                              verbose = 1)
+    # Input layer configuration
+    mdl_iply_pars <- lay_pars[[1]]
+    mdl <- mdl %>% 
+      layer_dense(units = mdl_iply_pars$units, activation = mdl_iply_pars$act, 
+                  kernel_regularizer = regularizer_l1_l2(l1 = mdl_iply_pars$reg_l1, l2 = mdl_iply_pars$reg_l2),
+                  input_shape = dim(mdl_trds)[[2]]) %>% 
+      layer_dropout(rate = mdl_iply_pars$drop_rate)
+    
+    # collecting parameters
+    uts_cln <- c(uts_cln, mdl_iply_pars$units)
+    act_cln <- c(act_cln, mdl_iply_pars$act)
+    l1_cln <- c(l1_cln, mdl_iply_pars$reg_l1)
+    l2_cln <- c(l2_cln, mdl_iply_pars$reg_l2)
+    dr_cln <- c(dr_cln, mdl_iply_pars$drop_rate)
+    
+    # Inner layer configuration
+    mdl_inly_n <- ly_n - 2
+    if(mdl_inly_n != 0){
+      for(i in 1:mdl_inly_n){
+        mdl_inly_pars <- lay_pars[[1+i]]
+        mdl <- mdl %>% 
+          layer_dense(units = mdl_inly_pars$units, activation = mdl_inly_pars$act, 
+                      kernel_regularizer = regularizer_l1_l2(l1 = mdl_inly_pars$reg_l1, l2 = mdl_inly_pars$reg_l2)) %>% 
+          layer_dropout(rate = mdl_inly_pars$drop_rate)
+        
+        # collecting parameters
+        uts_cln <- c(uts_cln, mdl_inly_pars$units)
+        act_cln <- c(act_cln, mdl_inly_pars$act)
+        l1_cln <- c(l1_cln, mdl_inly_pars$reg_l1)
+        l2_cln <- c(l2_cln, mdl_inly_pars$reg_l2)
+        dr_cln <- c(dr_cln, mdl_inly_pars$drop_rate)
+      }
+    }
+  
+    # Output layer configuration
+    mdl_oply_pars <- lay_pars[[length(lay_pars)]]
+    if(mdl_oply_act == ""){
+      mdl <- mdl %>% layer_dense(units = mdl_oply_pars$units)
+    } else {
+      mdl <- mdl %>% layer_dense(units = mdl_oply_pars$units, activation = mdl_oply_act)
+    }
+    
+    # collecting parameters
+    uts_cln <- c(uts_cln, mdl_inly_pars$units)
+    act_cln <- c(act_cln, mdl_oply_act)
+    l1_cln <- c(l1_cln, -1)
+    l2_cln <- c(l2_cln, -1)
+    dr_cln <- c(dr_cln, -1)
   }
   
-  return(mdl)
+  # Compile the model
+  mdl %>% keras::compile(
+    optimizer = keras::optimizer_rmsprop(lr = mdl_lr),
+    loss = mdl_lsf,
+    metrics = mdl_mtc
+  )
+  
+  mdl1 <- mdl %>% keras::fit(
+    x = x,
+    y = y,
+    epochs = pars[1, "nrounds"],
+    batch_size = mdl_bsz,
+    validation_data = list(x_val, y_val)
+  )
+  
+  return(mdl1)
 }

@@ -405,8 +405,8 @@ observeEvent(input$mxgbtg_run, {
               ##
               # plot the learning curve
               mdl <- cv_sets[[cv_id]]
-			  errs <- mdl$evaluation_log
-			  FitPlot("xgboost tree", "Error", errs, "iter", "train_error", "test_error")
+			        mdl_lc <- mdl$evaluation_log
+			        FitPlot("xgboost tree", input$cgen_job_type, mdl_lc, "iter", "train_error", "test_error")
             })
           }, i, cv_sets)
         })
