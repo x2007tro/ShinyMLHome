@@ -1,95 +1,149 @@
-##
-# Bayesian Search
-##
-observeEvent(input$xgbt_bs_search, {
+observeEvent(input$mxgbtb_run, {
+  ##
+  # first thing first
+  mdl_nm <- "xgbtree"
+  score_board_opt <- model_output_specs[model_output_specs$model == mdl_nm, "score_board"]
+  conf_mtrx_opt <- model_output_specs[model_output_specs$model == mdl_nm, "conf_mtrx"]
+  var_imp_opt <- model_output_specs[model_output_specs$model == mdl_nm, "var_imp"]
+  tree_plot_opt <- model_output_specs[model_output_specs$model == mdl_nm, "tree_plot"]
+  cp_table_opt <- model_output_specs[model_output_specs$model == mdl_nm, "cp_table"]
+  lc_plot_opt <- model_output_specs[model_output_specs$model == mdl_nm, "learning_curve_plot"]
+  tree_pick_ipt <- model_output_specs[model_output_specs$model == mdl_nm, "tree_pick_input"]
   
-  # Once grid search button is clicked, start searching procedure
+  # step 1. data formatting
+  fmtd_data <- FormatData4Model(
+    prdctrs = dataset()$predictors,
+    tgt = dataset()$target, 
+    tgt_map = dataset()$target_map,
+    job = input$cgen_job_type,
+    model = mdl_nm
+  )
   
-  # step 1. create a grid search data.frame
-  res <- lapply(1:length(xgbt_pars), function(i){
-    pnm <- xgbt_pars[i]
+  # step 2.1 model specific parameters
+  res <- lapply(1:nrow(xgbt_pars), function(i){
+    pnm <- paste0("mxgbtp_", xgbt_pars[i, "par"])
     res <- CreateParRange("bayesian", input[[paste0(pnm, "_beg")]], input[[paste0(pnm, "_end")]], input[[paste0(pnm, "_inc")]])
-    return(res)
   })
-  names(res) <- xgbt_pars
-  tuning_pars <- res
+  names(res) <- xgbt_pars$par
+  ##
+  # this step differs between grid and bayesian search
+  #
+  # grid search needs data.frame while bayesian requires list to work
+  tuning_pars <- res   
+  
+  # step 2.2 initial grid for bayesian
   ig <- lapply(1:length(tuning_pars), function(i){
     mean(tuning_pars[[i]])
   })
-  names(ig) <- xgbt_pars 
+  names(ig) <- xgbt_pars$par
   
-  # step 2. run grid search
+  # step 2.3 bayesian model parameters
+  bayesian_pars <- lapply(1:nrow(bs_pars), function(i){
+    res <- input[[paste0("mxgbtb_", bs_pars[i, "par"])]]
+    ifelse(res == "y", TRUE, FALSE)
+  })
+  names(bayesian_pars) <- bs_pars$par
+  bayesian_pars[["ini_grid"]] <- ig  # add initial grid to pars
+  
+  # step 3. universal model parameters
+  static_pars <- lapply(1:nrow(unv_pars), function(i){
+    res <- input[[paste0("mxgbtb_", unv_pars[i, "par"])]]
+    ifelse(res == "y", TRUE, FALSE)
+  })
+  names(static_pars) <- unv_pars$par
+  
+  # step 4. run bayesian search
   withProgress(
-    message = 'Bayesian search in progress. ',
+    message = paste0(mdl_nm, " train in progress. "),
     detail = 'This may take a while ...', value = 0, {
       tuning_res <- tryCatch({
-        br <- BayesianSearchXgbT2(
+        br <- BayesianSearchXgbtree2(
           proj = input$cgen_proj_name,
-          dataset = as.matrix(dataset()),
-          labels = as.numeric(targets()),
+          model_name = mdl_nm,
+          dataset = fmtd_data$predictors,
+          labels = fmtd_data$target,
           job = input$cgen_job_type,
           val_size = input$cgen_val_size,
           cv_rep = input$cgen_cv_rep,
-          xgbt_pars = tuning_pars,
-          bayes_ini_grid = ig,
-          bayes_kappa = input[[paste0(bs_pars[1], "_val")]],
-          bayes_eps = input[[paste0(bs_pars[2], "_val")]],
-          bayes_nrounds = input[[paste0(bs_pars[3], "_val")]],
-          save_pred = ifelse(input$xgbt_bs_save_pred == "y", TRUE, FALSE)
+          mdl_pars = tuning_pars,   # data.frame
+          stc_pars = static_pars,    # list
+          bs_pars = bayesian_pars    # list
         )
-        msg <- "bayesian search success!"
+        msg <- paste0(mdl_nm, " run success!")
         list(br, msg)
       },
-      error=function(cond) {
+      error = function(cond) {
         print("Here's the original error message:")
         print(cond)
-        br <- data.frame(result = paste0("bayesian search failed: ", cond))
-        msg <- "bayesian search failed!"
+        msg <- paste0(mdl_nm, " run failed!")
+        br <- data.frame(result = paste0(mdl_nm, " run failed: ", cond))
         list(br, msg)
       },
       # warning=function(cond) {
-      #   msg <- "bayesian search failed!"
-      #   br <- data.frame(result = paste0("bayesian search failed: ", cond))
+      #   msg <- paste0(mdl_nm, " run failed!")
+      #   res <- data.frame(result = paste0(mdl_nm, " run failed: ", cond))
+      #   list(res, msg)
       # },
       finally={
       })
     })
   
-  # step 3. if output text results
-  if(input$xgbt_bs_save_res == "y"){
-    CreateDirIfNotExist(paste0("Output/Text"))
-    write.csv(tuning_res[[1]], file = paste0("Output/Text/xgbTree_bayesian_",
-                                        format(Sys.Date(),"%Y%m%d"),"-",
-                                        format(Sys.time(),"%H%M%S"),
-                                        ".csv"), row.names = FALSE)
+  # res structure
+  # res = list(
+  #   score_board (data.frame),
+  #   models = list (
+  #     parameter set 1 = list (model1, model2, model3, ...),
+  #     parameter set 2 = list (model1, model2, model3, ...),
+  #     ......
+  #   ),
+  #   train_results = list (
+  #     parameter set 1 = list (
+  #        cross val 1 = list (
+  #          item 1 = probablity (data.frame),
+  #          item 2 = prediction (data.frame),
+  #          item 3 = accuracy (numeric),
+  #          item 4 = prediction na (numeric),
+  #          item 5 = confusion matrix (matrix)
+  #        )
+  #        cross val 2 = list (
+  #          item 1 = probablity (data.frame),
+  #          item 2 = prediction (data.frame),
+  #          item 3 = accuracy (numeric),
+  #          item 4 = prediction na (numeric),
+  #          item 5 = confusion matrix (matrix)
+  #        )        
+  #     )
+  #     parameter set 2 ......
+  #     ......
+  #   ),
+  #   valdn_results same structure as train_results
+  # )
+  # 
+  res <- tuning_res[[1]]
+  msg <- tuning_res[[2]]
+  
+  # step 5. if output text results
+  SaveResults(res, static_pars$output_dir, mdl_nm, static_pars$save_res)
+  
+  # step 6. if training run successfully, output
+  if(msg != paste0(mdl_nm, " run failed!")){
+    ##
+    # output scoreboard
+    ##
+    output$mxgbtb_sb <- DT::renderDataTable({
+      DT::datatable(
+        res, 
+        options = list(dom = "t"),
+        rownames = FALSE
+      )
+    })
   }
   
-  # step 4. output results to shiny
-  output$xgbt_bs_search_result <- DT::renderDataTable({
-    DT::datatable(
-      tuning_res[[1]], 
-      options = list(
-        pageLength = 10,
-        orderClasses = TRUE,
-        searching = TRUE,
-        paging = TRUE,
-        scrollX = 400,
-        scrollY = 400,
-        scrollCollapse = TRUE),
-      rownames = FALSE
-    )
+  ##
+  # step 5. output run message
+  ##
+  output$mxgbtb_run_msg <- renderText({
+    msg
   })
   
-  # step 5. output message
-  output$xgbt_bs_message <- renderText({
-    tuning_res[[2]]
-  })
-  
-  # step 6. output Search graphs
-  output$xgbt_bs_graph <- renderUI({
-    list(
-      textInput("xgbt_bs_graphx", NULL, value = paste0(input$cgen_root_dir, input$cgen_proj_name, "/Output/"),
-                width = file_dir_field_width)
-    )
-  })
 })

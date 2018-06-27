@@ -81,7 +81,7 @@ shiny_dir <- paste0("C:/Users/Ke/Desktop/Data Science/ShinyMLHome/")
 ##
 source(paste0(shiny_dir, "Helper/ml_helper.R"))
 source(paste0(shiny_dir, "Helper/seed.R"))
-source(paste0(shiny_dir, "Model/mtensorflow.R"))
+#source(paste0(shiny_dir, "Model/mtensorflow.R"))
 source(paste0(shiny_dir, "Model/mxgbtree.R"))
 source(paste0(shiny_dir, "Model/mregression.R"))
 source(paste0(shiny_dir, "Model/mdecisiontree.R"))
@@ -116,7 +116,6 @@ db_par_tbl <- "* Input 01 : Parameters *"
 db_target_src <- "000_030_Target"
 db_target_map <- "* Input 02 : Target Map *"
 db_predictors_src <- "Predictors R01"
-
 
 ##
 # initialize project variable
@@ -172,14 +171,3 @@ tf_pars <- c("nlayers", "units", "reg_l1", "reg_l2", "drop_rate", "tf_nrounds")
 tf_pars_def <- c(3, 10, 0, 0, 0, 300)
 tf_pars_rng <- c("0 - inf (3)", "0 - inf (10)", "0 - 1 (0)", "0 - 1 (0)", "0 - 1 (0)", "0 - inf (300)")
 tf_pars_hint <- c("", "", "", "", "", "")
-
-##
-# Parameters for xgbtree panel
-##
-xgbt_pars <- c("eta", "max_depth", "gamma", "min_child_weight",
-               "subsample", "colsample_bytree", "xgbt_nrounds")
-xgbt_pars_def <- c(0.3, 6, 0, 1, 1, 1, 300)
-xgbt_pars_rng <- c("0 - 1 (0.3)", "0 - inf (6)", "0 - inf (0)", "0 - inf (1)", 
-                   "0 - 1 (1)", "0 - 1 (1)", "0 - inf (300)")
-xgbt_pars_hint <- c("0.01 - 0.2", "3 - 10", "", "", 
-                   "0.5 - 1", "0.5 - 1", "")

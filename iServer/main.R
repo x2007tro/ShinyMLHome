@@ -113,12 +113,12 @@ mainServer <- function(input, output, session) {
   ##
   # Xgbtree grid Search
   ##
-  #source(paste0(shiny_dir, "iServer/model_xgbtree_grid.R"), local = TRUE)
+  source(paste0(shiny_dir, "iServer/model_xgbtree_grid.R"), local = TRUE)
   
   ##
   # Xgbtree bayesian Search
   ##
-  #source(paste0(shiny_dir, "iServer/model_xgbtree_bayesian.R"), local = TRUE)
+  source(paste0(shiny_dir, "iServer/model_xgbtree_bayesian.R"), local = TRUE)
   
   ##############################################################################################################
   # Model ensemble

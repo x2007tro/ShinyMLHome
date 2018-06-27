@@ -371,6 +371,42 @@ PredictMe <- function(model, data, label = c(), job,
     } else {
       # do nothing
     }
+  } else if(model_name == "xgbtree"){
+    # -- xgbtree model
+    if(job == "bc"){
+      ##
+      # computer probability and prediction
+      prob <- predict(model, data, reshape = FALSE)
+      probs <- data.frame(x1 = 1 - prob, x2 = prob)
+      colnames(probs) <- levels(label)
+      
+      ##
+      # manipulate pred vector
+      pred <- prob
+      pred[pred <= 0.5] <- levels(label)[1]
+      pred[pred > 0.5] <- levels(label)[2]
+      pred_fac <- as.factor(pred)
+      
+      ##
+      # confusion matrix
+      cf <- caret::confusionMatrix(pred_fac, label)
+    } else if (job == "mc") {
+	  ##
+      # computer probability and prediction
+      probs <- predict(model, data, reshape = TRUE)
+	  colnames(probs) <- levels(label)
+	  pred <- sapply(1:nrow(probs), function(i){
+        x <- probs[i,]
+        levels(label)[which(x == max(x))]
+      })
+	  cf <- data.frame(f1 = character(0))
+	} else if (job == "rg") {
+      probs <- data.frame(f1 = character(0))
+      pred <- predict(model, data, reshape = FALSE)
+      cf <- data.frame(f1 = character(0))
+    } else {
+      # do nothing
+    }
   } else {
     
   }
@@ -421,65 +457,6 @@ SaveResults <- function(df, output_dir, name, flag){
                                 format(Sys.time(),"%H%M%S"),
                                 ".csv"), row.names = FALSE) 
   }
-}
-
-##
-# Prediction old
-##
-PredictMe_old <- function(model, data, label = c(), job, 
-                      model_name = all_models){
-  
-  
-  if(caret == TRUE){
-    if(job == "bc"){
-      probs <- predict(model, data, type = "prob")
-      prob <- probs$fc_1
-      pred <- as.numeric(prob > 0.5)
-    } else if (job == "mc"){
-      probs <- predict(model, data, type = "prob")
-      pred <- sapply(1:nrow(probs), function(i){
-        x <- probs[i,]
-        which(x == max(x))
-      })
-    } else if (job == "reg"){
-      prob <- -1
-      pred <- predict(model, data)
-    } else {
-      # do nothing so far
-    }
-  } else {
-    if(job == "bc"){
-      prob <- predict(model, data, type = "response")
-      pred <- as.numeric(prob > 0.5)
-    } else if (job == "mc"){
-      prob <- predict(model, data, type = "response")
-      pred <- sapply(1:nrow(prob), function(i){
-        x <- prob[i,]
-        which(x == max(x))
-      })
-    } else if (job == "reg"){
-      prob <- -1
-      pred <- predict(model, data)
-    } else {
-      # do nothing so far
-    }
-  }
-  
-  if(length(label) == 0){
-    res <- list(
-      prob = prob,
-      pred = pred,
-      accr = 0
-    )
-  } else {
-    res <- list(
-      prob = prob,
-      pred = pred,
-      accr = mean(pred == label)
-    )
-  }
-  
-  return(res)
 }
 
 ##

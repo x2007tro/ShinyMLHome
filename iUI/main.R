@@ -3,7 +3,7 @@
 ##
 ui_files <- c("data_upload", "data_select", "data_format",
               #"model_tensorflow_par", "model_tensorflow_grid", "model_tensorflow_bayesian", "model_tensorflow_test",
-              #"model_xgbtree_par", "model_xgbtree_grid", "model_xgbtree_bayesian", "model_xgbtree_test",
+              "model_xgbtree_par", "model_xgbtree_grid", "model_xgbtree_bayesian", "model_xgbtree_plot",
               "model_regression_par", "model_regression_grid", 
               "model_navbay_par", "model_navbay_grid", "model_navbay_plot",
               "model_dectree_par", "model_dectree_grid", "model_dectree_plot",
@@ -116,9 +116,10 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
         tabPanel(
           "Extreme Gradient Boosting Tree",
           tabsetPanel(
-            #tp_model_xgbtree_par,
-            #tp_model_xgbtree_grid,
-            #tp_model_xgbtree_bayesian
+            tp_model_xgbtree_par,
+            tp_model_xgbtree_grid,
+            tp_model_xgbtree_bayesian,
+			tp_model_xgbtree_plot
           )
         ),
         
