@@ -2,7 +2,7 @@
 # Source all ui files
 ##
 ui_files <- c("data_upload", "data_select", "data_format",
-              #"model_tensorflow_par", "model_tensorflow_grid", "model_tensorflow_bayesian", "model_tensorflow_test",
+              "model_tensorflow_par", "model_tensorflow_grid", "model_tensorflow_bayesian", "model_tensorflow_plot",
               "model_xgbtree_par", "model_xgbtree_grid", "model_xgbtree_bayesian", "model_xgbtree_plot",
               "model_regression_par", "model_regression_grid", 
               "model_navbay_par", "model_navbay_grid", "model_navbay_plot",
@@ -131,9 +131,10 @@ mainUI <- fluidPage(theme = shinythemes::shinytheme("united"),
           # Tensorflow model
           "Tensorflow",
           tabsetPanel(
-            #tp_model_tensorflow_par,
-            #tp_model_tensorflow_grid,
-            #tp_model_tensorflow_bayesian
+            tp_model_tensorflow_par,
+            tp_model_tensorflow_grid,
+            tp_model_tensorflow_bayesian,
+			tp_model_tensorflow_plot
           )
         ),
         tabPanel(

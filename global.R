@@ -163,11 +163,3 @@ format_options <- c("Scale", "OnehotEncoding")
 # Parameters for model ensemble
 ##
 med_options <- c("prob", "pred")
-
-##
-# Parameters for tensorflow panel
-##
-tf_pars <- c("nlayers", "units", "reg_l1", "reg_l2", "drop_rate", "tf_nrounds")
-tf_pars_def <- c(3, 10, 0, 0, 0, 300)
-tf_pars_rng <- c("0 - inf (3)", "0 - inf (10)", "0 - 1 (0)", "0 - 1 (0)", "0 - 1 (0)", "0 - inf (300)")
-tf_pars_hint <- c("", "", "", "", "", "")

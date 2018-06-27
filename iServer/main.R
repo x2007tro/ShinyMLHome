@@ -99,12 +99,12 @@ mainServer <- function(input, output, session) {
   ##
   # Tensorflow grid Search
   ##
-  #source(paste0(shiny_dir, "iServer/model_tensorflow_grid.R"), local = TRUE)
+  source(paste0(shiny_dir, "iServer/model_tensorflow_grid.R"), local = TRUE)
   
   ##
   # Tensorflow bayesian Search
   ##
-  #source(paste0(shiny_dir, "iServer/model_tensorflow_bayesian.R"), local = TRUE)
+  source(paste0(shiny_dir, "iServer/model_tensorflow_bayesian.R"), local = TRUE)
   
   ##############################################################################################################
   # Xgboost tree model
