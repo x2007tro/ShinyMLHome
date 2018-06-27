@@ -1,4 +1,4 @@
-tp_model_randomforest_grid <- tabPanel(
+tp_model_gbmh2o_grid <- tabPanel(
   "Grid Search",
   fluidRow(
     column(
@@ -9,32 +9,32 @@ tp_model_randomforest_grid <- tabPanel(
       # load universal parameters for all models
       ##
       lapply(1:nrow(unv_pars), function(i){
-        radioButtons(paste0("mrfg_", unv_pars[i, "par"]), unv_pars[i, "desc"], 
+        radioButtons(paste0("mgbmg_", unv_pars[i, "par"]), unv_pars[i, "desc"], 
                      choices = c(unv_pars[i, "choice1"], unv_pars[i, "choice2"]), 
                      selected = unv_pars[i, "default"])
       }),
 
-      actionButton("mrfg_run", "Run"),
-      textOutput("mrfg_run_msg")
+      actionButton("mgbmg_run", "Run"),
+      textOutput("mgbmg_run_msg")
     ),
     column(
       width = 12 - tp_wid_nar,
       tags$div(
         class = "frame_wrapper",
         tags$div(class = "title_wrapper", tags$h5(class = "title_content_lg", " Score Board")),
-        tags$div(class = "content_wrapper", DT::dataTableOutput("mrfg_sb"))
+        tags$div(class = "content_wrapper", DT::dataTableOutput("mgbmg_sb"))
       ),
       br(),
       tags$div(
         class = "frame_wrapper",
         tags$div(class = "title_wrapper", tags$h5(class = "title_content_lg", " Confusion Matrix")),
-        tags$div(class = "content_wrapper", uiOutput("mrfg_cfmtx"))
+        tags$div(class = "content_wrapper", uiOutput("mgbmg_cfmtx"))
       ),
       br(),
       tags$div(
         class = "frame_wrapper",
         tags$div(class = "title_wrapper", tags$h5(class = "title_content_lg", " Variable Importance")),
-        tags$div(class = "content_wrapper", uiOutput("mrfg_varimp"))
+        tags$div(class = "content_wrapper", uiOutput("mgbmg_varimp"))
       )
     )
   )

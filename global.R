@@ -31,12 +31,6 @@ if(!("nnet" %in% rownames(installed.packages()))) { install.packages("nnet") }
 if(!("naivebayes" %in% rownames(installed.packages()))) { install.packages("naivebayes") }
 if(!("randomForest" %in% rownames(installed.packages()))) { install.packages("randomForest") }
 if(!("RRF" %in% rownames(installed.packages()))) { install.packages("RRF") }
-##
-# Remove old h2o
-if ("package:h2o" %in% search()) { detach("package:h2o", unload=TRUE) }
-if ("h2o" %in% rownames(installed.packages())) { remove.packages("h2o") }
-#3
-# Next, we download, install and initialize the H2O package for R.
 if(!("h2o" %in% rownames(installed.packages()))) {
   install.packages("h2o", repos=(c("http://s3.amazonaws.com/h2o-release/h2o/master/1497/R", getOption("repos"))))
 }

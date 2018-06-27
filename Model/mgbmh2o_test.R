@@ -1,6 +1,3 @@
-# The following two commands remove any previously installed H2O packages for R.
-if ("package:h2o" %in% search()) { detach("package:h2o", unload=TRUE) }
-if ("h2o" %in% rownames(installed.packages())) { remove.packages("h2o") }
 
 # Next, we download, install and initialize the H2O package for R.
 if(!("h2o" %in% rownames(installed.packages()))) {
@@ -12,27 +9,28 @@ localH2O <- h2o.init()
 ##
 # Select and format data
 ##
-datasetp <- read.csv("../Dataset/train_prelim2.csv", 
+##
+# Select and format data
+##
+datasetp <- read.csv("C:/Users/KE/OneDrive/Development/Data Science/Projects/Titanic/Dataset/train_prelim2.csv", 
                      header = TRUE, stringsAsFactors = FALSE)
-datasetf <- FormatData4Model(datasetp, job = "bc", model = "gbm_h2o", target = "Survived")
+datasetf <- FormatData4Model(datasetp[,-1], 
+                             as.data.frame(paste0("cat_",datasetp[,1]), stringAsfactors = FALSE),
+                             job = "bc", model = "decision_tree")
 
-rps_var <- "Survived"
-dep_vars <- colnames(datasetf)[!(colnames(datasetf) %in% rps_var)]
-
-##
-# Train the tree model
-##
-mdl <- h2o.gbm(x = dep_vars, y = rps_var, training_frame = as.h2o(datasetf[1:691,]), distribution = "AUTO")
-h2o.accuracy(h2o.performance(mdl, newdata = as.h2o(datasetf[692:891,]))) 
+# train data
+train_data <- cbind.data.frame(datasetf$target, datasetf$predictors)
+colnames(train_data) <- c("Target", colnames(datasetf$predictors))
+fmr <- as.formula(paste("Target","~", paste(colnames(datasetf$predictors), collapse="+")))
 
 ##
 # Train the model with early stopping
 ##
 gbm <- h2o.gbm(
-  x = dep_vars, 
-  y = rps_var, 
-  training_frame = as.h2o(datasetf[1:691,]), 
-  validation_frame = as.h2o(datasetf[692:891,]),
+  x = colnames(train_data), 
+  y = "Target", 
+  training_frame = as.h2o(train_data), 
+  validation_frame = as.h2o(train_data),
   nfolds = 0,
   score_each_iteration = TRUE,
   
@@ -65,15 +63,15 @@ gbm <- h2o.gbm(
 ##
 # Plot
 ##
-train_err_hist <- mdl@model$scoring_history
-mdl_sumry <- mdl@model$model_summary
-var_imp <- mdl@model$variable_importances
-plot(mdl)
+train_err_hist <- gbm@model$scoring_history
+# mdl_sumry <- gbm@model$model_summary  # useless
+var_imp <- gbm@model$variable_importances[,c("variable","percentage")]
+plot(gbm)
 
 ##
 # Prediction
 ##
-pred_h2o <- h2o.predict(mdl, as.h2o(datasetf[692:891,]))
+pred_h2o <- h2o.predict(gbm, as.h2o(train_data[,-1]))
 probs <- as.data.frame(pred_h2o)
 prob <- probs[,3]
 pred <- as.numeric(prob > 0.5)

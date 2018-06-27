@@ -9,7 +9,7 @@
 ##
 # BayesianSearch
 ##
-BayesianSearchRandomForest2 <- function(proj = "",
+BayesianSearchGBMH2O2 <- function(proj = "",
                               model_name,
                               dataset,
                               labels,
@@ -30,22 +30,25 @@ BayesianSearchRandomForest2 <- function(proj = "",
   bs_cv_rep <- cv_rep   # used
   
   # define optimization function
-  BsOpUtil <- function(mtry, coef_reg, reg_flag, min_child_weight, max_node, nrounds){
+  BsOpUtil <- function(max_depth, min_child_weight, learn_rate, learn_rate_annealing, 
+                       sample_rate, col_sample_rate, nrounds, stopping_rounds){
     ##
     # create parameter
     mdl_pars_bayesian <- data.frame(
-      mtry = floor(mtry),
-      coef_reg = coef_reg,
-      reg_flag = reg_flag,
-      min_child_weight = floor(min_child_weight),
-      max_node = floor(max_node),
+      max_depth = floor(max_depth), 
+      min_child_weight = floor(min_child_weight), 
+      learn_rate = learn_rate, 
+      learn_rate_annealing = learn_rate_annealing,
+      sample_rate = sample_rate,
+      col_sample_rate = col_sample_rate,
       nrounds = floor(nrounds),
+      stopping_rounds = floor(stopping_rounds),
       stringsAsFactors = FALSE
     )
     
     ##
     # run cv main algorithm
-    tr_res <- CrossValRandomForest2(
+    tr_res <- CrossValGBMH2O2(
       proj = paste0(bs_proj,"-","bayesian"),
       model_name = model_name,
       dataset = bs_ds,
@@ -87,7 +90,7 @@ BayesianSearchRandomForest2 <- function(proj = "",
 ##
 # GridSearch
 ##
-GridSearchRandomForest2 <- function(proj = "",
+GridSearchGBMH2O2 <- function(proj = "",
                                model_name,
                                dataset,
                                labels,
@@ -119,7 +122,7 @@ GridSearchRandomForest2 <- function(proj = "",
       # 3. list of train results for each cross validation
       # 4. list of validation results for each cross validation
       #
-      res <- CrossValRandomForest2(proj = gs_proj,
+      res <- CrossValGBMH2O2(proj = gs_proj,
                               model_name = model_name,
                               dataset = gs_ds,
                               labels = gs_ls,
@@ -137,14 +140,12 @@ GridSearchRandomForest2 <- function(proj = "",
     models <- purrr::map(res2, 2)
     train_results <- purrr::map(res2, 3)
     valdn_results <- purrr::map(res2, 4)
-    cv_results <- purrr::map(res2, 5)
     
     res <- list(
       score_board = score_board,
       models = models,
       train_results = train_results,
-      valdn_results = valdn_results,
-      cv_results = cv_results
+      valdn_results = valdn_results
     )
   } else {
     print("Error: no parameters for tuning!")
@@ -156,7 +157,7 @@ GridSearchRandomForest2 <- function(proj = "",
 ##
 # Cross validation
 ##
-CrossValRandomForest2 <- function(proj = "",
+CrossValGBMH2O2 <- function(proj = "",
                              model_name,
                              dataset,
                              labels,
@@ -207,7 +208,7 @@ CrossValRandomForest2 <- function(proj = "",
     # 3. train_result 
     # 4. valdn_result
     #
-    mdl <- TrainRandomForest2(proj_nm = cv_proj,
+    mdl <- TrainGBMH2O2(proj_nm = cv_proj,
                          model_name,
                          split_id = splt_sd,
                          job = cv_jb,
@@ -230,8 +231,9 @@ CrossValRandomForest2 <- function(proj = "",
   res <- purrr::map(all_res,2)
   cv_res <- dplyr::bind_rows(res) 
   cv_res <- cv_res %>% 
-    dplyr::group_by(proj, job, feature_select, min_leaf_size, max_num_of_leaves,
-                    reg_flag, reg_coef, num_of_trees) %>% 
+    dplyr::group_by(proj, job, max_depth, min_leaf_size, learning_rate,
+                    learning_rate_reduction, data_subset, feature_subset,
+                    num_of_trees, early_stop) %>% 
     summarise(
       avg_na_perc = mean(na_perc, na.rm = TRUE),
       avg_loss = -1,
@@ -244,15 +246,14 @@ CrossValRandomForest2 <- function(proj = "",
     score_board = cv_res,
     model_list = purrr::map(all_res, 1),
     train_res_list = purrr::map(all_res, 3),
-    valdn_res_list = purrr::map(all_res, 4),
-    cv_res_list = purrr::map(all_res, 5)
+    valdn_res_list = purrr::map(all_res, 4)
   ))
 }
 
 ##
 # function TrainTF
 ##
-TrainRandomForest2 <- function(proj_nm = "",
+TrainGBMH2O2 <- function(proj_nm = "",
                           model_name,
                           split_id = 1,
                           job = c("bc", "mc", "rg"),  # binary class., multi class., regression
@@ -303,7 +304,7 @@ TrainRandomForest2 <- function(proj_nm = "",
   ##
   # Train decision tree model
   ##
-  mdl <- CoreTrainRandomForest2(x = mdl_trds,
+  mdl <- CoreTrainGBMH2O2(x = mdl_trds,
                                 y = mdl_trl,
                                 x_val = mdl_vads,
                                 y_val = mdl_val,
@@ -337,12 +338,14 @@ TrainRandomForest2 <- function(proj_nm = "",
     proj = mdl_pn,
     spt_id = mdl_si,
     job = mdl_job,
-    feature_select = mdl_pars[1, "mtry"], 
+    max_depth = mdl_pars[1, "max_depth"], 
     min_leaf_size = mdl_pars[1, "min_child_weight"], 
-    max_num_of_leaves = mdl_pars[1, "max_node"], 
-    reg_flag = mdl_pars[1, "reg_flag"],
-    reg_coef = mdl_pars[1, "coef_reg"],
+    learning_rate = mdl_pars[1, "learn_rate"], 
+    learning_rate_reduction = mdl_pars[1, "learn_rate_annealing"],
+    data_subset = mdl_pars[1, "sample_rate"],
+    feature_subset = mdl_pars[1, "col_sample_rate"],
     num_of_trees = mdl_pars[1, "nrounds"],
+    early_stop = mdl_pars[1, "stopping_rounds"],
     na_perc = valp$na_pred,
     loss = "n/a",
     accuracy = valp$accr,
@@ -364,16 +367,12 @@ TrainRandomForest2 <- function(proj_nm = "",
     #                                      format(Sys.time(),"%H%M%S"),".png"))
   }
   
-  # unique for random forest
-  cv_res <- RRF::rrfcv(mdl_trds, mdl_trl, cv.fold=5)
-  
   # create output
   res <- list(
     model = mdl, 
     score_board = sb,
     train_res = trp,
-    valdn_res = valp,
-    cv_res = cv_res
+    valdn_res = valp
   )
   
   return(res)
@@ -382,21 +381,53 @@ TrainRandomForest2 <- function(proj_nm = "",
 ##
 # Core decision tree train
 ##
-CoreTrainRandomForest2 <- function(x, y, x_val, y_val, pars, 
+CoreTrainGBMH2O2 <- function(x, y, x_val, y_val, pars, 
                               job = c("bc", "mc", "rg")){
   
   ##
-  # Train the model
+  # Prepare data
   ##
   train_data <- cbind.data.frame(y, x)
   colnames(train_data) <- c("Target", colnames(x))
-  fmr <- as.formula(paste("Target","~", paste(colnames(x), collapse="+")))
   
-  set.seed(1111)
-  mdl <- RRF::RRF(
-    formula = fmr, data = train_data, xtest = x_val, ytest = y_val, keep.forest = TRUE, importance = TRUE,
-    mtry = pars[1, "mtry"], nodesize = pars[1, "min_child_weight"], maxnodes = if(pars[1, "max_node"] == 0) NULL else pars[1, "max_node"], 
-    ntree = pars[1, "nrounds"], coefReg = pars[1, "coef_reg"], flagReg = if(pars[1, "reg_flag"] > 0.5) 1 else 0
+  val_data <- cbind.data.frame(y_val, x_val)
+  colnames(val_data) <- c("Target", colnames(x_val))
+  
+  ##
+  # Train the model with early stopping
+  ##
+  mdl <- h2o.gbm(
+    x = colnames(train_data), 
+    y = "Target", 
+    training_frame = as.h2o(train_data), 
+    validation_frame = as.h2o(val_data),
+    nfolds = 0,
+    score_each_iteration = TRUE,
+    
+    ## more trees is better if the learning rate is small enough 
+    ## here, use "more than enough" trees - we have early stopping
+    ntrees = pars[1, "nrounds"],                                                            
+    
+    ## early stopping once the validation error doesn't improve by at least 0.01% for 10 consecutive scoring events
+    stopping_rounds = pars[1, "stopping_rounds"], stopping_tolerance = 1e-4, stopping_metric = "AUTO", 
+    
+    ## smaller learning rate is better (this is a good value for most datasets, but see below for annealing)
+    learn_rate = pars[1, "learn_rate"], learn_rate_annealing = pars[1, "learn_rate_annealing"],
+    
+    ## depth of the tree and mini child # in one node
+    max_depth = pars[1, "max_depth"], min_rows = pars[1, "min_child_weight"],
+    
+    ## sample 80% of rows per tree
+    sample_rate = pars[1, "sample_rate"], sample_rate_per_class = NULL,                                                    
+    
+    ## sample 80% of columns per split
+    col_sample_rate = pars[1, "col_sample_rate"], col_sample_rate_per_tree = 1,                                                  
+    
+    ## fix a random number generator seed for reproducibility
+    seed = 1111,                                                             
+    
+    ## score every 10 trees to make early stopping reproducible (it depends on the scoring interval)
+    score_tree_interval = 10                                               
   )
   
   return(mdl)

@@ -57,6 +57,7 @@ To add a new model, do the following steps:
     + update the parameter variable name - xxx_pars
     + update the ui component name - mxxxg/p
     + replace GridSearchxxx2 with new model name
+    + add/remove ui output depending on the model
 13. Update ./iServer/model_xxx_bayesian.R (if applicable)
     + update model name parameter - mdl_nm
     + update the parameter variable name - xxx_pars

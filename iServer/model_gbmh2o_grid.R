@@ -1,7 +1,7 @@
-observeEvent(input$mrfg_run, {
+observeEvent(input$mgbmg_run, {
   ##
   # first thing first
-  mdl_nm <- "random_forest"
+  mdl_nm <- "gbm_h2o"
   score_board_opt <- model_output_specs[model_output_specs$model == mdl_nm, "score_board"]
   conf_mtrx_opt <- model_output_specs[model_output_specs$model == mdl_nm, "conf_mtrx"]
   var_imp_opt <- model_output_specs[model_output_specs$model == mdl_nm, "var_imp"]
@@ -22,16 +22,16 @@ observeEvent(input$mrfg_run, {
   )
   
   # step 2. model specific parameters
-  res <- lapply(1:nrow(rf_pars), function(i){
-    pnm <- paste0("mrfp_", rf_pars[i, "par"])
+  res <- lapply(1:nrow(gbm_pars), function(i){
+    pnm <- paste0("mgbmp_", gbm_pars[i, "par"])
     res <- CreateParRange("grid", input[[paste0(pnm, "_beg")]], input[[paste0(pnm, "_end")]], input[[paste0(pnm, "_inc")]])
   })
-  names(res) <- rf_pars$par
+  names(res) <- gbm_pars$par
   tuning_pars <- expand.grid(res)
   
   # step 3. universal model parameters
   static_pars <- lapply(1:nrow(unv_pars), function(i){
-    res <- input[[paste0("mrfg_", unv_pars[i, "par"])]]
+    res <- input[[paste0("mgbmg_", unv_pars[i, "par"])]]
     ifelse(res == "y", TRUE, FALSE)
   })
   names(static_pars) <- unv_pars$par
@@ -41,7 +41,7 @@ observeEvent(input$mrfg_run, {
     message = paste0(mdl_nm, " train in progress. "),
     detail = 'This may take a while ...', value = 0, {
       tuning_res <- tryCatch({
-        br <- GridSearchRandomForest2(
+        br <- GridSearchGBMH2O2(
           proj = input$cgen_proj_name,
           model_name = mdl_nm,
           dataset = fmtd_data$predictors,
@@ -114,7 +114,7 @@ observeEvent(input$mrfg_run, {
     # output scoreboard
     ##
     if(score_board_opt) {
-      output$mrfg_sb <- DT::renderDataTable({
+      output$mgbmg_sb <- DT::renderDataTable({
         DT::datatable(
           res$score_board, 
           options = list(dom = "t"),
@@ -129,7 +129,7 @@ observeEvent(input$mrfg_run, {
     if(conf_mtrx_opt & input$cgen_job_type == "bc"){
       ##
       # first create output objects
-      output$mrfg_cfmtx <- renderUI({
+      output$mgbmg_cfmtx <- renderUI({
         opt <- lapply(1:length(res$train_results), function(i){
           cv_sets <- res$train_results[[i]]
           fluidRow(
@@ -185,7 +185,7 @@ observeEvent(input$mrfg_run, {
     if(var_imp_opt){
       ##
       # first create output objects
-      output$mrfg_varimp <- renderUI({
+      output$mgbmg_varimp <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -214,13 +214,8 @@ observeEvent(input$mrfg_run, {
             output[[paste0(mdl_nm, "_vi_", ps_id, "_", cv_id)]] <- DT::renderDataTable({
               ##
               # produce meat (modify)
-              imp <- RRF::importance(cv_sets[[cv_id]])
-              meat <- data.frame(
-                variable = rownames(imp),
-                accy_dec = round(imp[,"MeanDecreaseAccuracy"], 2),
-                gini_dec = round(imp[,"MeanDecreaseGini"], 2),
-                stringsAsFactors = FALSE
-              )
+              mdl <- cv_sets[[cv_id]]
+              meat <- mdl@model$variable_importances[,c("variable","percentage")]
               ##
               # present meat
               DT::datatable(meat,
@@ -247,7 +242,7 @@ observeEvent(input$mrfg_run, {
     if(cp_table_opt){
       ##
       # first create output objects
-      output$mrfg_cpt <- renderUI({
+      output$mgbmg_cpt <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -300,7 +295,7 @@ observeEvent(input$mrfg_run, {
     # Model specific input - tree pick
     ##
     if(tree_pick_ipt){
-      # output$mrfp_tree_pick <- renderUI({
+      # output$mgbmpl_tree_pick <- renderUI({
       #   ##
       #   # determine max num of trees
       #   max_num_tree <- min(tuning_pars$nrounds, na.rm = TRUE)
@@ -323,7 +318,7 @@ observeEvent(input$mrfg_run, {
       
       ##
       # first create output objects
-      output$mrfpl_tree <- renderUI({
+      output$mgbmpl_tree <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -375,7 +370,7 @@ observeEvent(input$mrfg_run, {
     if(lc_plot_opt){
       ##
       # first create output objects
-      output$mrfpl_lc <- renderUI({
+      output$mgbmpl_lc <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -409,12 +404,7 @@ observeEvent(input$mrfg_run, {
             output[[paste0(mdl_nm, "_lc_", ps_id, "_", cv_id)]] <- renderPlot({
               ##
               # plot the learning curve
-              err <- cv_sets[[cv_id]]$err.rate
-              xerr <- cv_sets[[cv_id]]$test$err.rate
-              mdl_lc <- data.frame(iter = 1:cv_sets[[cv_id]]$ntree,
-                                   train_err = err[,1], 
-                                   test_err = xerr[,1])
-              FitPlot("Random Forest", input$cgen_job_type, mdl_lc, "iter", "train_err", "test_err")
+              plot(cv_sets[[cv_id]])
             })
           }, i, cv_sets)
         })
@@ -427,7 +417,7 @@ observeEvent(input$mrfg_run, {
     if(cv_plot_opt){
       ##
       # first create output objects
-      output$mrfpl_cv <- renderUI({
+      output$mgbmpl_cv <- renderUI({
         opt <- lapply(1:length(res$cv_results), function(i){
           cv_sets <- res$cv_results[[i]]
           fluidRow(
@@ -475,7 +465,7 @@ observeEvent(input$mrfg_run, {
     if(pd_plot_opt){
       ##
       # first create output objects
-      output$mrfpl_pd <- renderUI({
+      output$mgbmpl_pd <- renderUI({
         opt <- lapply(1:length(res$models), function(i){
           cv_sets <- res$models[[i]]
           fluidRow(
@@ -530,7 +520,7 @@ observeEvent(input$mrfg_run, {
   ##
   # step 5. output run message
   ##
-  output$mrfg_run_msg <- renderText({
+  output$mgbmg_run_msg <- renderText({
     msg
   })
   

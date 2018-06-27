@@ -350,6 +350,27 @@ PredictMe <- function(model, data, label = c(), job,
     } else {
       # do nothing
     }
+  } else if(model_name == "gbm_h2o"){
+    # -- gbm h20
+    pred_all <- h2o.predict(model, as.h2o(data))
+    pred_all <- as.data.frame(pred_all)
+    if(job == "bc" | job == "mc"){
+      probs <- pred_all[,-1]
+      pred <- pred_all[,1]
+      pred_fac <- as.factor(pred)
+      # if bc, calculate confusion matrix
+      if(job == "bc"){
+        cf <- caret::confusionMatrix(pred_fac, label)
+      } else {
+        cf <- data.frame(f1 = character(0))
+      }
+    } else if (job == "rg") {
+      probs <- data.frame(f1 = character(0))
+      pred <- pred_all[,1]
+      cf <- data.frame(f1 = character(0))
+    } else {
+      # do nothing
+    }
   } else {
     
   }
