@@ -31,7 +31,7 @@ BayesianSearchXgbtree2 <- function(proj = "",
   
   # define optimization function
   BsOpUtil <- function(max_depth, min_child_weight, eta, colsample_bytree, 
-                       subsample, gamma, nrounds, stopping_round){
+                       subsample, gamma, nrounds, stopping_rounds){
     ##
     # create parameter
     mdl_pars_bayesian <- data.frame(
@@ -42,7 +42,7 @@ BayesianSearchXgbtree2 <- function(proj = "",
       subsample = subsample,
       colsample_bytree = colsample_bytree,
       nrounds = floor(nrounds),
-      stopping_round = floor(stopping_round),
+      stopping_rounds = floor(stopping_rounds),
       stringsAsFactors = FALSE
     )
     
@@ -345,7 +345,7 @@ TrainXgbtree2 <- function(proj_nm = "",
     data_subset = mdl_pars[1, "subsample"],
     feature_subset = mdl_pars[1, "colsample_bytree"],
     num_of_trees = mdl_pars[1, "nrounds"],
-    early_stop = mdl_pars[1, "stopping_round"],
+    early_stop = mdl_pars[1, "stopping_rounds"],
     na_perc = valp$na_pred,
     loss = "n/a",
     accuracy = valp$accr,
@@ -412,18 +412,18 @@ CoreTrainXgbtree2 <- function(x, y, x_val, y_val, pars,
     max_depth = pars[1, "max_depth"],
     min_child_weight = pars[1, "min_child_weight"],
     subsample = pars[1, "subsample"],
-    colsample_bytree = pars[1, "colsample_bytree"],
-	nrounds = pars[1, "nrounds"],
-	early_stopping_rounds = pars[1, "stopping_round"]
+    colsample_bytree = pars[1, "colsample_bytree"]
   )
   
   # train model parameters
-  if(mdl_job == "mc"){
+  if(job == "mc"){
     # Training
     mdl <- xgboost::xgb.train(params = mdl_pars,
                               data = dm_strain,
                               booster = "gbtree",
                               objective = mdl_lsf,
+                              nrounds = pars[1, "nrounds"],
+                              early_stopping_rounds = pars[1, "stopping_round"],
                               num_class = length(unique(y)),
                               watchlist = list(train=dm_strain, test=dm_valdn),
                               verbose = 1)
@@ -433,6 +433,8 @@ CoreTrainXgbtree2 <- function(x, y, x_val, y_val, pars,
                               data = dm_strain,
                               booster = "gbtree",
                               objective = mdl_lsf,
+                              nrounds = pars[1, "nrounds"],
+                              early_stopping_rounds = pars[1, "stopping_round"],
                               watchlist = list(train=dm_strain, test=dm_valdn),
                               verbose = 1)
   }

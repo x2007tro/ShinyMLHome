@@ -48,7 +48,6 @@ observeEvent(input$mgbmb_run, {
   # step 3. universal model parameters
   static_pars <- lapply(1:nrow(unv_pars), function(i){
     res <- input[[paste0("mgbmb_", unv_pars[i, "par"])]]
-    ifelse(res == "y", TRUE, FALSE)
   })
   names(static_pars) <- unv_pars$par
   

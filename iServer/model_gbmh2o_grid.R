@@ -130,8 +130,8 @@ observeEvent(input$mgbmg_run, {
       ##
       # first create output objects
       output$mgbmg_cfmtx <- renderUI({
-        opt <- lapply(1:length(res$train_results), function(i){
-          cv_sets <- res$train_results[[i]]
+        opt <- lapply(1:length(res$valdn_results), function(i){
+          cv_sets <- res$valdn_results[[i]]
           fluidRow(
             lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
               column(
@@ -149,9 +149,9 @@ observeEvent(input$mgbmg_run, {
       
       ##
       # then render confusion matrix objects
-      lapply(1:length(res$train_results), function(i){
+      lapply(1:length(res$valdn_results), function(i){
         local({
-          cv_sets <- res$train_results[[i]]
+          cv_sets <- res$valdn_results[[i]]
           lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
             ##
             # render output

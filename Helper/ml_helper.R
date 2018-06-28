@@ -119,7 +119,8 @@ FormatData4Model <- function(prdctrs, tgt, tgt_map,
         new_tgt <- tgt
       } else if (mdl_nm == "xgbtree"){
         # if xgbtree, target should be numerical
-        tmp_tgt <- dplyr::inner_join(tgt, map, by = c("StrTarget"))
+        tgt_df <- data.frame(StrTarget = tgt, stringsAsFactors = FALSE)
+        tmp_tgt <- dplyr::inner_join(tgt_df, tgt_map, by = c("StrTarget"))
         new_tgt <- tmp_tgt$NumTarget
         tgt_nm <- "NumTarget"
         tgt_map_used <- TRUE
@@ -151,8 +152,10 @@ FormatData4Model <- function(prdctrs, tgt, tgt_map,
     }
     new_prdctrs <- prdctrs
   } else if (mdl_nm == "xgbtree") {
-    # data has to be matrix
-    new_prdctrs <- as.matrix(prdctrs) * 1.0
+    # data has to be matrix - force formatting
+    prdctrs2 <- ToNumeric(colnames(prdctrs), prdctrs)
+    new_prdctrs <- as.matrix(prdctrs2) * 1.0
+    colnames(new_prdctrs) <- colnames(prdctrs2)
   } else if (mdl_nm == "tensorflow") {
     # do nothing
     new_prdctrs <- prdctrs
@@ -503,7 +506,7 @@ ToNumericOneCol <- function(col_nm, dataset){
   vals_l1 <- dataset[,col_nm]
   cls <- class(vals_l1)[1]
   
-  #if(cls == "character"){
+  if(cls == "character"){
     vals <- unique(vals_l1)
     
     lookup <- data.frame(
@@ -519,9 +522,9 @@ ToNumericOneCol <- function(col_nm, dataset){
     
     new_vals <- dplyr::inner_join(ori_val, lookup, by = "key")
     new_val <- new_vals$num_val
-  # } else {
-  #   new_val <- vals_l1
-  # }
+  } else {
+     new_val <- vals_l1
+  }
   
   return(as.data.frame(new_val, stringsAsFactors = FALSE))
 }

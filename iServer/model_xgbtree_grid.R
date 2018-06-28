@@ -131,8 +131,8 @@ observeEvent(input$mxgbtg_run, {
       ##
       # first create output objects
       output$mxgbtg_cfmtx <- renderUI({
-        opt <- lapply(1:length(res$train_results), function(i){
-          cv_sets <- res$train_results[[i]]
+        opt <- lapply(1:length(res$valdn_results), function(i){
+          cv_sets <- res$valdn_results[[i]]
           fluidRow(
             lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
               column(
@@ -150,9 +150,9 @@ observeEvent(input$mxgbtg_run, {
       
       ##
       # then render confusion matrix objects
-      lapply(1:length(res$train_results), function(i){
+      lapply(1:length(res$valdn_results), function(i){
         local({
-          cv_sets <- res$train_results[[i]]
+          cv_sets <- res$valdn_results[[i]]
           lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
             ##
             # render output
@@ -216,7 +216,13 @@ observeEvent(input$mxgbtg_run, {
               ##
               # produce meat (modify)
               mdl <- cv_sets[[cv_id]]
-              meat <- xgboost::xgb.importance(mdl)
+              raw_meat <- xgboost::xgb.importance(model = mdl)
+              features <- colnames(fmtd_data$predictors)
+              meat <- data.frame(
+                variable = features[as.numeric(raw_meat$Feature)+1],
+                importance = raw_meat$Gain,
+                stringsAsFactors = FALSE
+              )
               ##
               # present meat
               DT::datatable(meat,
@@ -354,10 +360,10 @@ observeEvent(input$mxgbtg_run, {
             output[[paste0(mdl_nm, "_tr_", ps_id, "_", cv_id)]] <- renderPlot({
               ##
               # produce meat (modify)
-			  mdl <- cv_sets[[cv_id]]
+			        mdl <- cv_sets[[cv_id]]
               ##
               # present meat
-              xgboost::xgb.plot.tree(mdl, trees = tree_id-1)
+              xgboost::xgb.plot.tree(model = mdl, trees = tree_id-1)
             })
           }, i, cv_sets)
         })
@@ -520,9 +526,9 @@ observeEvent(input$mxgbtg_run, {
   }
   
   ##
-	# Model specific output - learning curve plot
+	# Model specific output - deepness plot
   ##
-  if(lc_plot_opt){
+  if(dn_plot_opt){
     ##
     # first create output objects
     output$mxgbtpl_dn <- renderUI({
@@ -538,7 +544,7 @@ observeEvent(input$mxgbtg_run, {
                   tags$div(class = "title_wrapper", 
                            tags$h6(class = "title_content_sm", 
                                    paste0("Parameter set ",ps_id," (CV #", cv_id, ")"))),
-                  plotOutput(paste0(mdl_nm, "_lc_", ps_id, "_", cv_id))
+                  plotOutput(paste0(mdl_nm, "_dn_", ps_id, "_", cv_id))
                 )
               )
             }, i, cv_sets)  
@@ -556,11 +562,11 @@ observeEvent(input$mxgbtg_run, {
         lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
           ##
           # render output (modify)
-          output[[paste0(mdl_nm, "_lc_", ps_id, "_", cv_id)]] <- renderPlot({
+          output[[paste0(mdl_nm, "_dn_", ps_id, "_", cv_id)]] <- renderPlot({
             ##
             # plot the learning curve
             mdl <- cv_sets[[cv_id]]
-            xgboost::xgb.ggplot.deepness(mdl, which = "2x1", pch=16, col=rgb(0,0,1,0.3), cex=2)
+            xgboost::xgb.ggplot.deepness(mdl, which = "2x1")
           })
         }, i, cv_sets)
       })

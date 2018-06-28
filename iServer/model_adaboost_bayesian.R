@@ -40,7 +40,6 @@ observeEvent(input$mabb_run, {
   # step 2.3 bayesian model parameters
   bayesian_pars <- lapply(1:nrow(bs_pars), function(i){
     res <- input[[paste0("mabb_", bs_pars[i, "par"])]]
-    ifelse(res == "y", TRUE, FALSE)
   })
   names(bayesian_pars) <- bs_pars$par
   bayesian_pars[["ini_grid"]] <- ig  # add initial grid to pars
@@ -48,7 +47,6 @@ observeEvent(input$mabb_run, {
   # step 3. universal model parameters
   static_pars <- lapply(1:nrow(unv_pars), function(i){
     res <- input[[paste0("mabb_", unv_pars[i, "par"])]]
-    ifelse(res == "y", TRUE, FALSE)
   })
   names(static_pars) <- unv_pars$par
   

@@ -40,7 +40,6 @@ observeEvent(input$mrfb_run, {
   # step 2.3 bayesian model parameters
   bayesian_pars <- lapply(1:nrow(bs_pars), function(i){
     res <- input[[paste0("mrfb_", bs_pars[i, "par"])]]
-    ifelse(res == "y", TRUE, FALSE)
   })
   names(bayesian_pars) <- bs_pars$par
   bayesian_pars[["ini_grid"]] <- ig  # add initial grid to pars
