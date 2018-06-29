@@ -81,7 +81,7 @@ shiny_dir <- paste0("C:/Users/Ke/Desktop/Data Science/ShinyMLHome/")
 ##
 source(paste0(shiny_dir, "Helper/ml_helper.R"))
 source(paste0(shiny_dir, "Helper/seed.R"))
-#source(paste0(shiny_dir, "Model/mtensorflow.R"))
+source(paste0(shiny_dir, "Model/mtensorflow.R"))
 source(paste0(shiny_dir, "Model/mxgbtree.R"))
 source(paste0(shiny_dir, "Model/mregression.R"))
 source(paste0(shiny_dir, "Model/mdecisiontree.R"))

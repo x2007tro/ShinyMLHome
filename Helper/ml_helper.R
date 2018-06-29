@@ -114,14 +114,9 @@ FormatData4Model <- function(prdctrs, tgt, tgt_map,
          mdl_nm == "ada_boost" | mdl_nm == "random_forest" | mdl_nm == "gbm_h2o"){
         # if above models, target should be factors
         new_tgt <- as.factor(tgt)
-      } else if (mdl_nm == "tensorflow") {
-        # if tensorflow, target should be non-factors
-        new_tgt <- tgt
-      } else if (mdl_nm == "xgbtree"){
+      } else if (mdl_nm == "xgbtree" | mdl_nm == "tensorflow"){
         # if xgbtree, target should be numerical
-        tgt_df <- data.frame(StrTarget = tgt, stringsAsFactors = FALSE)
-        tmp_tgt <- dplyr::inner_join(tgt_df, tgt_map, by = c("StrTarget"))
-        new_tgt <- tmp_tgt$NumTarget
+        new_tgt <- SwapTargetType(tgt = tgt, tgt_map = tgt_map, from_nm = "StrTarget", to_nm = "NumTarget")
         tgt_nm <- "NumTarget"
         tgt_map_used <- TRUE
       } else {
@@ -151,14 +146,11 @@ FormatData4Model <- function(prdctrs, tgt, tgt_map,
       prdctrs[,i] <- tmp_mod
     }
     new_prdctrs <- prdctrs
-  } else if (mdl_nm == "xgbtree") {
+  } else if (mdl_nm == "xgbtree" | mdl_nm == "tensorflow") {
     # data has to be matrix - force formatting
     prdctrs2 <- ToNumeric(colnames(prdctrs), prdctrs)
     new_prdctrs <- as.matrix(prdctrs2) * 1.0
     colnames(new_prdctrs) <- colnames(prdctrs2)
-  } else if (mdl_nm == "tensorflow") {
-    # do nothing
-    new_prdctrs <- prdctrs
   } else {
     new_prdctrs <- prdctrs
   }
@@ -235,7 +227,7 @@ CreateParRange <- function(type = c("exact", "grid", "bayesian"), beg = 0, end =
 # Prediction
 ##
 PredictMe <- function(model, data, label = c(), job, 
-                      model_name = all_models){
+                      model_name = all_models, tgt_map = data.frame(f1=character(0))){
   if(model_name == "decision_tree"){
     # -- decision tree
     # if rg, no probability
@@ -376,7 +368,8 @@ PredictMe <- function(model, data, label = c(), job,
     }
   } else if(model_name == "xgbtree"){
     # -- xgbtree model
-	label <- as.factor(label)
+    label <- SwapTargetType(label, tgt_map, "NumTarget", "StrTarget")
+	  label <- as.factor(label)
     if(job == "bc"){
       ##
       # computer probability and prediction
@@ -395,15 +388,15 @@ PredictMe <- function(model, data, label = c(), job,
       # confusion matrix
       cf <- caret::confusionMatrix(pred_fac, label)
     } else if (job == "mc") {
-	  ##
+	    ##
       # computer probability and prediction
       probs <- predict(model, data, reshape = TRUE)
-	  colnames(probs) <- levels(label)
-	  pred <- sapply(1:nrow(probs), function(i){
+	    colnames(probs) <- levels(label)
+	    pred <- sapply(1:nrow(probs), function(i){
         x <- probs[i,]
         levels(label)[which(x == max(x))]
       })
-	  cf <- data.frame(f1 = character(0))
+	    cf <- data.frame(f1 = character(0))
 	} else if (job == "rg") {
       probs <- data.frame(f1 = character(0))
       pred <- predict(model, data, reshape = FALSE)
@@ -411,9 +404,10 @@ PredictMe <- function(model, data, label = c(), job,
     } else {
       # do nothing
     }
-  } else if(model_name == "xgbtree"){
+  } else if(model_name == "tensorflow"){
     # -- tensorflow model
-	label <- as.factor(label)
+    label <- SwapTargetType(label, tgt_map, "NumTarget", "StrTarget")
+    label <- as.factor(label)
     if(job == "bc"){
       ##
       # computer probability and prediction
@@ -424,13 +418,14 @@ PredictMe <- function(model, data, label = c(), job,
       ##
       # manipulate pred vector
       pred <- keras::predict_classes(model, data)
+      pred <- SwapTargetType(pred[,1], tgt_map, "NumTarget", "StrTarget")
       pred_fac <- as.factor(pred)
 	  
-	  ##
+	    ##
       # confusion matrix
       cf <- caret::confusionMatrix(pred_fac, label)
     } else if (job == "mc") {
-	  ##
+	    ##
       # computer probability and prediction
       probs <- keras::predict_proba(model, data)
       colnames(probs) <- levels(label)
@@ -438,9 +433,10 @@ PredictMe <- function(model, data, label = c(), job,
       ##
       # manipulate pred vector
       pred <- keras::predict_classes(model, data)
+      pred <- SwapTargetType(pred[,1], tgt_map, "NumTarget", "StrTarget")
       pred_fac <- as.factor(pred)
-	  cf <- data.frame(f1 = character(0))
-	} else if (job == "rg") {
+	    cf <- data.frame(f1 = character(0))
+	  } else if (job == "rg") {
       probs <- data.frame(f1 = character(0))
       pred <- keras::predict(model, data)
       cf <- data.frame(f1 = character(0))
@@ -459,6 +455,25 @@ PredictMe <- function(model, data, label = c(), job,
     cf = cf$table
   )
   return(res)
+}
+
+##
+# Swap target type
+##
+SwapTargetType <- function(tgt, tgt_map, from_nm, to_nm){
+  if(is.vector(tgt)){
+    # create a data.frame
+    tgt_df <- data.frame(f1 = tgt, stringsAsFactors = FALSE)
+    colnames(tgt_df) <- from_nm
+    
+    # join/merge
+    tmp_tgt <- dplyr::inner_join(tgt_df, tgt_map, by = from_nm)
+    new_tgt <- tmp_tgt[,to_nm]
+  } else {
+    print("Target is not swapped due to tgt is not a vector!")
+    new_tgt <- tgt
+  }
+  return(new_tgt)
 }
 
 ##

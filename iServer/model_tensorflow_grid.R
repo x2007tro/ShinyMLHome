@@ -51,7 +51,8 @@ observeEvent(input$mtfg_run, {
           val_size = input$cgen_val_size,
           cv_rep = input$cgen_cv_rep,
           mdl_pars = tuning_pars,   # data.frame
-          stc_pars = static_pars    # list
+          stc_pars = static_pars,   # list
+          tgt_map = dataset()$target_map
         )
         msg <- paste0(mdl_nm, " run success!")
         list(br, msg)
@@ -131,8 +132,8 @@ observeEvent(input$mtfg_run, {
       ##
       # first create output objects
       output$mtfg_cfmtx <- renderUI({
-        opt <- lapply(1:length(res$train_results), function(i){
-          cv_sets <- res$train_results[[i]]
+        opt <- lapply(1:length(res$valdn_results), function(i){
+          cv_sets <- res$valdn_results[[i]]
           fluidRow(
             lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
               column(
@@ -150,9 +151,9 @@ observeEvent(input$mtfg_run, {
       
       ##
       # then render confusion matrix objects
-      lapply(1:length(res$train_results), function(i){
+      lapply(1:length(res$valdn_results), function(i){
         local({
-          cv_sets <- res$train_results[[i]]
+          cv_sets <- res$valdn_results[[i]]
           lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
             ##
             # render output
@@ -354,7 +355,7 @@ observeEvent(input$mtfg_run, {
             output[[paste0(mdl_nm, "_tr_", ps_id, "_", cv_id)]] <- renderPlot({
               ##
               # produce meat (modify)
-			  mdl <- cv_sets[[cv_id]]
+			        mdl <- cv_sets[[cv_id]]
               ##
               # present meat
               xgboost::xgb.plot.tree(mdl, trees = tree_id-1)
@@ -524,7 +525,7 @@ observeEvent(input$mtfg_run, {
   ##
 	# Model specific output - learning curve plot
   ##
-  if(lc_plot_opt){
+  if(dn_plot_opt){
     ##
     # first create output objects
     output$mtfpl_dn <- renderUI({
@@ -540,7 +541,7 @@ observeEvent(input$mtfg_run, {
                   tags$div(class = "title_wrapper", 
                            tags$h6(class = "title_content_sm", 
                                    paste0("Parameter set ",ps_id," (CV #", cv_id, ")"))),
-                  plotOutput(paste0(mdl_nm, "_lc_", ps_id, "_", cv_id))
+                  plotOutput(paste0(mdl_nm, "_dn_", ps_id, "_", cv_id))
                 )
               )
             }, i, cv_sets)  
@@ -558,7 +559,7 @@ observeEvent(input$mtfg_run, {
         lapply(1:length(cv_sets), function(cv_id, ps_id, cv_sets){
           ##
           # render output (modify)
-          output[[paste0(mdl_nm, "_lc_", ps_id, "_", cv_id)]] <- renderPlot({
+          output[[paste0(mdl_nm, "_dn_", ps_id, "_", cv_id)]] <- renderPlot({
             ##
             # plot the learning curve
             mdl <- cv_sets[[cv_id]]

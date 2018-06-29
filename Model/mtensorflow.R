@@ -19,7 +19,8 @@ BayesianSearchTensorflow2 <- function(proj = "",
                               cv_rep = 5,
                               mdl_pars,
                               stc_pars,
-                              bs_pars){
+                              bs_pars,
+                              tgt_map){
   # assign local variables
   bs_proj <- proj
   bs_ds <- dataset   # used
@@ -35,7 +36,7 @@ BayesianSearchTensorflow2 <- function(proj = "",
     # create parameter
     mdl_pars_bayesian <- data.frame(
       nlayers = floor(nlayers), 
-      units = floor(nlayers), 
+      units = floor(units), 
       reg_l1 = reg_l1, 
       reg_l2 = reg_l2,
       drop_rate = drop_rate,
@@ -55,7 +56,8 @@ BayesianSearchTensorflow2 <- function(proj = "",
       val_size = bs_val_sz,
       cv_rep = bs_cv_rep,
       mdl_pars = mdl_pars_bayesian,
-      stc_pars = stc_pars)
+      stc_pars = stc_pars,
+      tgt_map = tgt_map)
                           
     acc <- mean(tr_res$score_board$avg_acc, na.rm = TRUE)  # alough only one row
     
@@ -88,14 +90,15 @@ BayesianSearchTensorflow2 <- function(proj = "",
 # GridSearch
 ##
 GridSearchTensorflow2 <- function(proj = "",
-                               model_name,
-                               dataset,
-                               labels,
-                               job = c("bc", "mc", "rg"),
-                               val_size = 100,
-                               cv_rep = 5,
-                               mdl_pars,
-                               stc_pars){
+                                  model_name,
+                                  dataset,
+                                  labels,
+                                  job = c("bc", "mc", "rg"),
+                                  val_size = 100,
+                                  cv_rep = 5,
+                                  mdl_pars,
+                                  stc_pars,
+                                  tgt_map){
   # assign local variables.
   gs_proj <- proj
   gs_ds <- dataset   # used
@@ -128,7 +131,8 @@ GridSearchTensorflow2 <- function(proj = "",
                               val_size = gs_val_sz,
                               cv_rep = gs_cv_rep,
                               mdl_pars = mdl_par,
-                              stc_pars = stc_pars)
+                              stc_pars = stc_pars,
+                              tgt_map = tgt_map)
     })
     
     # Extract result
@@ -155,15 +159,16 @@ GridSearchTensorflow2 <- function(proj = "",
 # Cross validation
 ##
 CrossValTensorflow2 <- function(proj = "",
-                             model_name,
-                             dataset,
-                             labels,
-                             job = c("bc", "mc", "rg"),
-                             n,
-                             val_size = 100,
-                             cv_rep = 5,
-                             mdl_pars,
-                             stc_pars){
+                                model_name,
+                                dataset,
+                                labels,
+                                job = c("bc", "mc", "rg"),
+                                n,
+                                val_size = 100,
+                                cv_rep = 5,
+                                mdl_pars,
+                                stc_pars,
+                                tgt_map){
   
   # assign local variables
   cv_proj <- proj
@@ -217,6 +222,7 @@ CrossValTensorflow2 <- function(proj = "",
                          val_idx = valdn_idx,
                          mdl_pars = cv_mdl_pars,
                          stc_pars = cv_stc_pars,
+                         tgt_map = tgt_map,
                          output_dir = "Output")
     
     return(mdl)
@@ -258,6 +264,7 @@ TrainTensorflow2 <- function(proj_nm = "",
                           val_idx = c(),
                           mdl_pars,
                           stc_pars,
+                          tgt_map,
                           output_dir){
   
   ##
@@ -312,8 +319,8 @@ TrainTensorflow2 <- function(proj_nm = "",
   # 4.\ Prediction NA
   # 5.\ Confusion matrix (bc only)
   #
-  trp <- PredictMe(mdl, mdl_trds, mdl_trl, mdl_job, model_name = model_name)
-  valp <- PredictMe(mdl, mdl_vads, mdl_val, mdl_job, model_name = model_name)
+  trp <- PredictMe(mdl$model, mdl_trds, mdl_trl, mdl_job, model_name = model_name, tgt_map = tgt_map)
+  valp <- PredictMe(mdl$model, mdl_vads, mdl_val, mdl_job, model_name = model_name, tgt_map = tgt_map)
   
   # Save prediction
   pred_df <- data.frame(
@@ -324,7 +331,7 @@ TrainTensorflow2 <- function(proj_nm = "",
   SavePrediction(pred_df, mdl_optd, model_name, stc_pars$save_pred)
   
   # save model
-  SaveModel(mdl, mdl_optd, model_name, stc_pars$save_mod)
+  SaveModel(mdl$model, mdl_optd, model_name, stc_pars$save_mod)
   
   # construct evaluation score board
   sb <- data.frame(
@@ -359,7 +366,7 @@ TrainTensorflow2 <- function(proj_nm = "",
   
   # create output
   res <- list(
-    model = mdl, 
+    model = mdl$fit, 
     score_board = sb,
     train_res = trp,
     valdn_res = valp
@@ -388,11 +395,11 @@ CoreTrainTensorflow2 <- function(x, y, x_val, y_val, pars,
       if(j < ly_n){   # input and inner layers
         res <- list(
           units = pars[1, "units"], act = mdl_act, 
-		  reg_l1 = pars[1, "reg_l1"], reg_l2 = pars[1, "reg_l2"], drop_rate = pars[1, "drop_rate"]
+		      reg_l1 = pars[1, "reg_l1"], reg_l2 = pars[1, "reg_l2"], drop_rate = pars[1, "drop_rate"]
         )
       } else {   # output layers
         res <- list(
-          units = if(input_jb == "mc") v = length(unique(y)) else v = 1, 
+          units = if(job == "mc") v = length(unique(y)) else v = 1, 
           act = NA, reg_l1 = NA, reg_l2 = NA, drop_rate = NA   # last layer only uts matters
         )
       }
@@ -433,7 +440,7 @@ CoreTrainTensorflow2 <- function(x, y, x_val, y_val, pars,
   l1_cln <- c()
   l2_cln <- c()
   dr_cln <- c()
-  if(nlayers < 2){
+  if(ly_n < 2){
     print("Error: at least two layers are required!")
   } else {
     # Input layer configuration
@@ -441,7 +448,7 @@ CoreTrainTensorflow2 <- function(x, y, x_val, y_val, pars,
     mdl <- mdl %>% 
       layer_dense(units = mdl_iply_pars$units, activation = mdl_iply_pars$act, 
                   kernel_regularizer = regularizer_l1_l2(l1 = mdl_iply_pars$reg_l1, l2 = mdl_iply_pars$reg_l2),
-                  input_shape = dim(mdl_trds)[[2]]) %>% 
+                  input_shape = dim(x)[[2]]) %>% 
       layer_dropout(rate = mdl_iply_pars$drop_rate)
     
     # collecting parameters
@@ -493,7 +500,7 @@ CoreTrainTensorflow2 <- function(x, y, x_val, y_val, pars,
     metrics = mdl_mtc
   )
   
-  mdl1 <- mdl %>% keras::fit(
+  fit <- mdl %>% keras::fit(
     x = x,
     y = y,
     epochs = pars[1, "nrounds"],
@@ -501,5 +508,8 @@ CoreTrainTensorflow2 <- function(x, y, x_val, y_val, pars,
     validation_data = list(x_val, y_val)
   )
   
-  return(mdl1)
+  return(list(
+    model = mdl,
+    fit = fit
+  ))
 }

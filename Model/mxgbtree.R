@@ -19,7 +19,8 @@ BayesianSearchXgbtree2 <- function(proj = "",
                               cv_rep = 5,
                               mdl_pars,
                               stc_pars,
-                              bs_pars){
+                              bs_pars,
+                              tgt_map){
   # assign local variables
   bs_proj <- proj
   bs_ds <- dataset   # used
@@ -58,7 +59,8 @@ BayesianSearchXgbtree2 <- function(proj = "",
       val_size = bs_val_sz,
       cv_rep = bs_cv_rep,
       mdl_pars = mdl_pars_bayesian,
-      stc_pars = stc_pars)
+      stc_pars = stc_pars,
+      tgt_map)
                           
     acc <- mean(tr_res$score_board$avg_acc, na.rm = TRUE)  # alough only one row
     
@@ -98,7 +100,8 @@ GridSearchXgbtree2 <- function(proj = "",
                                val_size = 100,
                                cv_rep = 5,
                                mdl_pars,
-                               stc_pars){
+                               stc_pars,
+                               tgt_map){
   # assign local variables.
   gs_proj <- proj
   gs_ds <- dataset   # used
@@ -131,7 +134,8 @@ GridSearchXgbtree2 <- function(proj = "",
                               val_size = gs_val_sz,
                               cv_rep = gs_cv_rep,
                               mdl_pars = mdl_par,
-                              stc_pars = stc_pars)
+                              stc_pars = stc_pars,
+                              tgt_map = tgt_map)
     })
     
     # Extract result
@@ -166,7 +170,8 @@ CrossValXgbtree2 <- function(proj = "",
                              val_size = 100,
                              cv_rep = 5,
                              mdl_pars,
-                             stc_pars){
+                             stc_pars,
+                             tgt_map){
   
   # assign local variables
   cv_proj <- proj
@@ -220,6 +225,7 @@ CrossValXgbtree2 <- function(proj = "",
                          val_idx = valdn_idx,
                          mdl_pars = cv_mdl_pars,
                          stc_pars = cv_stc_pars,
+                         tgt_map = tgt_map,
                          output_dir = "Output")
     
     return(mdl)
@@ -265,6 +271,7 @@ TrainXgbtree2 <- function(proj_nm = "",
                           val_idx = c(),
                           mdl_pars,
                           stc_pars,
+                          tgt_map,
                           output_dir){
   
   ##
@@ -305,11 +312,11 @@ TrainXgbtree2 <- function(proj_nm = "",
   # Train decision tree model
   ##
   mdl <- CoreTrainXgbtree2(x = mdl_trds,
-                                y = mdl_trl,
-                                x_val = mdl_vads,
-                                y_val = mdl_val,
-                                pars = mdl_pars,
-                                job = mdl_job)
+                           y = mdl_trl,
+                           x_val = mdl_vads,
+                           y_val = mdl_val,
+                           pars = mdl_pars,
+                           job = mdl_job)
   ##
   # predict train data - return three/five items
   #
@@ -319,8 +326,8 @@ TrainXgbtree2 <- function(proj_nm = "",
   # 4.\ Prediction NA
   # 5.\ Confusion matrix (bc only)
   #
-  trp <- PredictMe(mdl, mdl_trds, mdl_trl, mdl_job, model_name = model_name)
-  valp <- PredictMe(mdl, mdl_vads, mdl_val, mdl_job, model_name = model_name)
+  trp <- PredictMe(mdl, mdl_trds, mdl_trl, mdl_job, model_name = model_name, tgt_map = tgt_map)
+  valp <- PredictMe(mdl, mdl_vads, mdl_val, mdl_job, model_name = model_name, tgt_map = tgt_map)
   
   # Save prediction
   pred_df <- data.frame(

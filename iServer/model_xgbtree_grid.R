@@ -51,7 +51,8 @@ observeEvent(input$mxgbtg_run, {
           val_size = input$cgen_val_size,
           cv_rep = input$cgen_cv_rep,
           mdl_pars = tuning_pars,   # data.frame
-          stc_pars = static_pars    # list
+          stc_pars = static_pars,    # list
+          tgt_map = dataset()$target_map
         )
         msg <- paste0(mdl_nm, " run success!")
         list(br, msg)

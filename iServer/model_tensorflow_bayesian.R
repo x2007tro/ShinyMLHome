@@ -40,7 +40,6 @@ observeEvent(input$mtfb_run, {
   # step 2.3 bayesian model parameters
   bayesian_pars <- lapply(1:nrow(bs_pars), function(i){
     res <- input[[paste0("mtfb_", bs_pars[i, "par"])]]
-    ifelse(res == "y", TRUE, FALSE)
   })
   names(bayesian_pars) <- bs_pars$par
   bayesian_pars[["ini_grid"]] <- ig  # add initial grid to pars
@@ -66,7 +65,8 @@ observeEvent(input$mtfb_run, {
           cv_rep = input$cgen_cv_rep,
           mdl_pars = tuning_pars,   # data.frame
           stc_pars = static_pars,    # list
-          bs_pars = bayesian_pars    # list
+          bs_pars = bayesian_pars,    # list
+          tgt_map = fmtd_data$tgt_map
         )
         msg <- paste0(mdl_nm, " run success!")
         list(br, msg)
