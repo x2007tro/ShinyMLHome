@@ -303,6 +303,7 @@ CoreTrainDecTree2 <- function(x, y, x_val, y_val, pars,
   fmr <- as.formula(paste("Target","~", paste(colnames(x), collapse="+")))
   mdl <- rpart::rpart(fmr, data = train_data,
                       control = rpart::rpart.control(
+                        split = "information",
                         maxdepth = pars[1, "max_depth"], 
                         minsplit = pars[1, "min_child_weight"],
                         cp = pars[1, "cp"])

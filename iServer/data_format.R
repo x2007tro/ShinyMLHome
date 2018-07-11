@@ -71,7 +71,7 @@ observeEvent(input$dsf_format, {
         scrollX = 400,
         scrollY = 400,
         scrollCollapse = TRUE),
-      rownames = FALSE
+      rownames = TRUE
     )
   })
   

@@ -392,6 +392,7 @@ CoreTrainAdaBoost2 <- function(x, y, x_val, y_val, pars,
                   nu = pars[1, "nu"], 
                   bag.frac = pars[1, "bag_frac"], verbose = TRUE,
                   control = rpart::rpart.control(
+                    split = "information",
                     maxdepth = pars[1, "max_depth"], 
                     minsplit = pars[1, "min_child_weight"],
                     cp = pars[1, "cp"])

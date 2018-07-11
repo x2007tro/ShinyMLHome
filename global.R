@@ -115,7 +115,7 @@ db_path <- paste0(proj_dir, "Dataset/train.accdb")
 db_par_tbl <- "* Input 01 : Parameters *"
 db_target_src <- "000_030_Target"
 db_target_map <- "* Input 02 : Target Map *"
-db_predictors_src <- "Predictors R01"
+db_predictors_src <- "Predictors R00 - Original"
 
 ##
 # initialize project variable

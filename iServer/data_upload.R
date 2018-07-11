@@ -8,6 +8,7 @@ dataset <- eventReactive({c(
 )}, {
   # First, read table content
   a <- ReadDataFromADB(input$cgen_db_path, input$dsu_upload)
+  rownames(a) <- 1:nrow(a)
   b <- DataInspection(a)
   c <- ReadDataFromADB(input$cgen_db_path, input$cgen_db_tgt_src)
   d <- ReadDataFromADB(input$cgen_db_path, input$cgen_db_tgt_map)
@@ -66,7 +67,7 @@ output$dsu_dts <- DT::renderDataTable({
       scrollX = 400,
       scrollY = 400,
       scrollCollapse = TRUE),
-    rownames = FALSE
+    rownames = TRUE
   )
 })
 

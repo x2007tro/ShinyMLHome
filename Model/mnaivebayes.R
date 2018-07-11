@@ -256,7 +256,7 @@ TrainNavBay2 <- function(proj_nm = "",
     spt_id = mdl_si,
     job = mdl_job,
     # Modify for specific model (beg)
-    laplace = pars[1, "laplace"],   
+    laplace = mdl_pars[1, "laplace"],   
     # Modify for specific model (end)
     na_perc = valp$na_pred,
     loss = "n/a",
