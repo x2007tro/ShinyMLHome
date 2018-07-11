@@ -284,8 +284,9 @@ PredictMe <- function(model, data, label = c(), job,
       ##
       # manipulate pred vector
       pred <- prob
-      pred[pred <= 0.5] <- levels(label)[1]
-      pred[pred > 0.5] <- levels(label)[2]
+      pred <- sapply(1:length(pred), function(i){ 
+        if(pred[i] <= 0.5) levels(label)[1] else levels(label)[2]
+      })
       pred_fac <- as.factor(pred)
       
       ##
@@ -380,8 +381,9 @@ PredictMe <- function(model, data, label = c(), job,
       ##
       # manipulate pred vector
       pred <- prob
-      pred[pred <= 0.5] <- levels(label)[1]
-      pred[pred > 0.5] <- levels(label)[2]
+      pred <- sapply(1:length(pred), function(i){ 
+        if(pred[i] <= 0.5) levels(label)[1] else levels(label)[2]
+      })
       pred_fac <- as.factor(pred)
       
       ##
