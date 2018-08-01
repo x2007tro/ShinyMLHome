@@ -19,6 +19,8 @@ if(!("Matrix" %in% rownames(installed.packages()))) { install.packages("Matrix")
 if(!("foreach" %in% rownames(installed.packages()))) { install.packages("foreach") }
 if(!("rBayesianOptimization" %in% rownames(installed.packages()))) { install.packages("rBayesianOptimization", dependencies = TRUE) }
 if(!("RODBC" %in% rownames(installed.packages()))) { install.packages("RODBC") }
+if(!("DBI" %in% rownames(installed.packages()))) { install.packages("DBI") }
+if(!("odbc" %in% rownames(installed.packages()))) { install.packages("odbc") }
 
 # machine learning
 if(!("caret" %in% rownames(installed.packages()))) { devtools::install_github('topepo/caret/pkg/caret') }
@@ -49,6 +51,8 @@ library(Matrix)
 library(ggpubr)
 library(rBayesianOptimization)
 library(RODBC)
+library(odbc)
+library(DBI)
 
 library(caret)
 library(keras)

@@ -647,3 +647,92 @@ ListTblsFromADB <- function(db_path){
   RODBC::odbcClose(conn)
   return(unlist(dfs_tn))
 }
+
+##
+# Return an active connection to SQL server
+##
+ConnSqlServer <- function(dsn_nm){
+  conn <- DBI::dbConnect(drv = odbc::odbc(), dsn = dsn_nm)
+  return(conn)
+}
+
+##
+# Read a table from access db
+##
+ReadDataFromSS <- function(dsn_nm, tbl_name){
+  conn <- ConnSqlServer(dsn_nm)
+  df <- DBI::dbReadTable(conn, tbl_name)
+  DBI::dbDisconnect(conn)
+  return(df)
+}
+
+##
+# Write a table to access db
+##
+WriteDataToSS <- function(dsn_nm, data, tbl_name){
+  conn <- ConnSqlServer(dsn_nm)
+  df <- DBI::dbWriteTable(conn, name = tbl_name, value = data,
+                          append = FALSE, overwrite = TRUE, row.names = FALSE)
+  DBI::dbDisconnect(conn)
+  return(df)
+}
+
+##
+# List all tables and queries
+##
+ListTblsFromSS <- function(dsn_nm){
+  conn <- ConnSqlServer(dsn_nm)
+  dfs_tn <- DBI::dbListTables(conn, schema = "dbo")
+  DBI::dbDisconnect(conn)
+  
+  return(dfs_tn)
+}
+
+##
+# Connect to SQL server using connection string
+##
+ConnSqlServerViaCS <- function(srv = "192.168.2.50", 
+                               dbn = "HomeLoanDefaultRisk", 
+                               id = "dspeast", 
+                               pwd = "dspeast"){
+  conn <- DBI::dbConnect(drv = odbc::odbc(),
+                         Driver = "ODBC Driver 17 for SQL Server",
+                         Server = srv,
+                         Database = dbn,
+                         UID = id,
+                         PWD = pwd,
+                         Port = 1433)
+  return(conn)
+}
+
+##
+# Read a table from access db
+##
+ReadDataFromSSviaConn <- function(conn, tbl_name){
+  df <- DBI::dbReadTable(conn, tbl_name)
+  return(df)
+}
+
+##
+# Write a table to access db
+##
+WriteDataToSSviaConn <- function(conn, data, tbl_name){
+  df <- DBI::dbWriteTable(conn, name = tbl_name, value = data,
+                          append = FALSE, overwrite = TRUE, row.names = FALSE)
+  return(df)
+}
+
+##
+# List all tables and queries
+##
+ListTblsFromSSviaConn <- function(conn){
+  dfs_tn <- DBI::dbListTables(conn, schema = "dbo")
+  return(dfs_tn)
+}
+
+##
+# Close connection
+##
+DisconnSSviaConn <- function(conn){
+  DBI::dbDisconnect(conn)
+}
