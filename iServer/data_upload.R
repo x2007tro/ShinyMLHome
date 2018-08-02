@@ -7,12 +7,12 @@ dataset <- eventReactive({c(
   input$dss_save
 )}, {
   # First, read table content
-  a <- ReadDataFromADB(input$cgen_db_path, input$dsu_upload)
+  a <- ReadDataFromSSviaCS(input$cgen_db_path, input$dsu_upload)
   rownames(a) <- 1:nrow(a)
   b <- DataInspection(a)
-  c <- ReadDataFromADB(input$cgen_db_path, input$cgen_db_tgt_src)
-  d <- ReadDataFromADB(input$cgen_db_path, input$cgen_db_tgt_map)
-  e <- ListTblsFromADB(input$cgen_db_path)
+  c <- ReadDataFromSSviaCS(input$cgen_db_path, input$cgen_db_tgt_src)
+  d <- ReadDataFromSSviaCS(input$cgen_db_path, input$cgen_db_tgt_map)
+  e <- ListTblsFromSSviaCS(input$cgen_db_path)
   
   # Second, update upload values
   updateSelectInput(session, "dsu_upload", NULL, choices = e, selected = input$dsu_upload)

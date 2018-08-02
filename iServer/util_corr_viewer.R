@@ -6,8 +6,8 @@ corr_data <- eventReactive({c(
   input$dsf_save,
   input$dss_save
 )}, {
-  dsb1 <- ReadDataFromADB(input$cgen_db_path, input$ucv_upload)
-  dsb2 <- ReadDataFromADB(input$cgen_db_path, input$cgen_db_tgt_src)
+  dsb1 <- ReadDataFromSSviaCS(input$cgen_db_path, input$ucv_upload)
+  dsb2 <- ReadDataFromSSviaCS(input$cgen_db_path, input$cgen_db_tgt_src)
   dsb <- cbind.data.frame(dsb2, dsb1)
   return(dsb)
 })

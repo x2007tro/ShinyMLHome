@@ -7,7 +7,7 @@ tp_data_upload <- tabPanel(
     column(
       tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Source data")),
       width = tp_wid_nar,
-      selectInput("dsu_upload", NULL, choices = ListTblsFromADB(db_path), selected = db_predictors_src, selectize = TRUE)
+      selectInput("dsu_upload", NULL, choices = ListTblsFromSSviaCS(proj_db_name), selected = db_predictors_src, selectize = TRUE)
     )
   ),
   fluidRow(

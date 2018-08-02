@@ -4,7 +4,8 @@ tp_util_corr_viewer <- tabPanel(
     column(
       width = tp_wid_hlf,
       tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Predictors")),
-      selectInput("ucv_upload", NULL, choices = ListTblsFromADB(db_path), selected = db_predictors_src, selectize = TRUE)
+      selectInput("ucv_upload", NULL, choices = ListTblsFromSSviaCS(proj_db_name), selected = db_predictors_src, 
+                  selectize = TRUE)
     ),
     column(
       width = 12 - tp_wid_hlf,

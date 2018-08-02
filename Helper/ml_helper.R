@@ -691,48 +691,47 @@ ListTblsFromSS <- function(dsn_nm){
 ##
 # Connect to SQL server using connection string
 ##
-ConnSqlServerViaCS <- function(srv = "192.168.2.50", 
-                               dbn = "HomeLoanDefaultRisk", 
-                               id = "dspeast", 
-                               pwd = "dspeast"){
+ConnSqlServerViaCS <- function(dbn){
+  srv <- "192.168.2.50,3773"  # kmpka123.ddns.net
+  id <- "dspeast"
+  pwd <- "yuheng"
+  
   conn <- DBI::dbConnect(drv = odbc::odbc(),
                          Driver = "ODBC Driver 17 for SQL Server",
                          Server = srv,
                          Database = dbn,
                          UID = id,
-                         PWD = pwd,
-                         Port = 1433)
+                         PWD = pwd)
   return(conn)
 }
 
 ##
-# Read a table from access db
+# Read a table from sel server db
 ##
-ReadDataFromSSviaConn <- function(conn, tbl_name){
+ReadDataFromSSviaCS <- function(dbn, tbl_name){
+  conn <- ConnSqlServerViaCS(dbn)
   df <- DBI::dbReadTable(conn, tbl_name)
+  DBI::dbDisconnect(conn)  
   return(df)
 }
 
 ##
-# Write a table to access db
+# Write a table to sql server db
 ##
-WriteDataToSSviaConn <- function(conn, data, tbl_name){
+WriteDataToSSviaCS <- function(dbn, data, tbl_name){
+	conn <- ConnSqlServerViaCS(dbn)
   df <- DBI::dbWriteTable(conn, name = tbl_name, value = data,
                           append = FALSE, overwrite = TRUE, row.names = FALSE)
+	DBI::dbDisconnect(conn) 				  
   return(df)
 }
 
 ##
 # List all tables and queries
 ##
-ListTblsFromSSviaConn <- function(conn){
-  dfs_tn <- DBI::dbListTables(conn, schema = "dbo")
-  return(dfs_tn)
-}
-
-##
-# Close connection
-##
-DisconnSSviaConn <- function(conn){
+ListTblsFromSSviaCS <- function(dbn){
+  conn <- ConnSqlServerViaCS(dbn)
+  dfs_tn <- DBI::dbListTables(conn, scheme = "dbo")
   DBI::dbDisconnect(conn)
+  return(dfs_tn)
 }

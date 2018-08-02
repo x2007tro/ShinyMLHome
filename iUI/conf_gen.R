@@ -4,8 +4,8 @@ tp_conf_gen <- tabPanel(
   fluidRow(
     column(
       width = 8,
-      textInput("cgen_root_dir", "root dirctory", value = root_dir, width = "700px"),
-      textInput("cgen_db_path", "access database", value = db_path, width = "700px"),
+      textInput("cgen_root_dir", "root directory", value = root_dir, width = "700px"),
+      textInput("cgen_db_path", "SQL Server database", value = proj_db_name, width = "700px"),
       textInput("cgen_db_tgt_src", "target table", value = db_target_src, width = "150px"),
       textInput("cgen_db_tgt_map", "target map", value = db_target_map, width = "150px"),
       textInput("cgen_proj_name", "project name", value = ini_proj, width = "150px"),

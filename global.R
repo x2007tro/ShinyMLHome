@@ -77,7 +77,7 @@ localH2O <- h2o.init()
 ##
 dev_dir <- paste0("C:/Users/",Sys.info()["user"], "/OneDrive/Development/")
 root_dir <- paste0(dev_dir, "Data Science/Projects/")
-proj_dir <- paste0(root_dir, "Titanic/")
+proj_dir <- paste0(root_dir, "HomeCreditDefaultRisk/")
 shiny_dir <- paste0("C:/Users/Ke/Desktop/Data Science/ShinyMLHome/")
 
 ##
@@ -115,15 +115,15 @@ blotter_field_default_width <- "100px"
 ##
 jt <- c("bc", "mc", "reg")
 image_dim <- c(640, 480)   # width, height
-db_path <- paste0(proj_dir, "Dataset/train.accdb") 
-db_par_tbl <- "* Input 01 : Parameters *"
-db_target_src <- "000_030_Target"
-db_target_map <- "* Input 02 : Target Map *"
-db_predictors_src <- "Predictors R00 - Original"
+proj_db_name <- "HomeLoanDefaultRisk"
+db_par_tbl <- "input01_parameters"
+db_target_map <- "input02_target_map"
+db_target_src <- "700_020_mlfeed_sample_target_cash01"
+db_predictors_src <- "predictors_r01"
 
 ##
 # initialize project variable
-global_pars <- ReadDataFromADB(db_path, db_par_tbl)
+global_pars <- ReadDataFromSSviaCS(proj_db_name, db_par_tbl)
 ini_proj <- global_pars[1, "Project"]
 ini_job <- global_pars[1, "Job"]
 ini_vds <- global_pars[1, "ValidationDatasetSize"]
@@ -132,7 +132,7 @@ ini_cvrep <- global_pars[1, "CVRep"]
 ##
 # model parameters
 ##
-mdl_db_path <- paste0(shiny_dir, "app.accdb")
+mdl_db_name <- "MachineLearningAlgorithm"
 mdl_db_avl_mdls <- "* Input 02 : Available Models *"
 mdl_db_unv_mp <- "* Input 05 : Universal Model Parameters *"
 mdl_db_bs_mp <- "* Input 09 : Bayesian Search Parameters *"
@@ -145,18 +145,18 @@ mdl_db_ab_mp <- "* Input 15 : Adaptive Boosting Parameters *"
 mdl_db_rf_mp <- "* Input 16 : Random Forest Parameters *"
 mdl_db_gbm_mp <- "* Input 17 : GBM H2O Parameters *"
 
-model_output_specs <- ReadDataFromADB(mdl_db_path, mdl_db_avl_mdls)
+model_output_specs <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_avl_mdls)
 all_models <- model_output_specs$model
-unv_pars <- ReadDataFromADB(mdl_db_path, mdl_db_unv_mp)
-bs_pars <- ReadDataFromADB(mdl_db_path, mdl_db_bs_mp)
-xgbt_pars <- ReadDataFromADB(mdl_db_path, mdl_db_xgbt_mp)
-tf_pars <- ReadDataFromADB(mdl_db_path, mdl_db_tf_mp)
-dt_pars <- ReadDataFromADB(mdl_db_path, mdl_db_dt_mp)
-nb_pars <- ReadDataFromADB(mdl_db_path, mdl_db_nb_mp)
-rg_pars <- ReadDataFromADB(mdl_db_path, mdl_db_rg_mp)
-ab_pars <- ReadDataFromADB(mdl_db_path, mdl_db_ab_mp)
-rf_pars <- ReadDataFromADB(mdl_db_path, mdl_db_rf_mp)
-gbm_pars <- ReadDataFromADB(mdl_db_path, mdl_db_gbm_mp)
+unv_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_unv_mp)
+bs_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_bs_mp)
+xgbt_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_xgbt_mp)
+tf_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_tf_mp)
+dt_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_dt_mp)
+nb_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_nb_mp)
+rg_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_rg_mp)
+ab_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_ab_mp)
+rf_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_rf_mp)
+gbm_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_gbm_mp)
 
 ##
 # Parameters for data panel

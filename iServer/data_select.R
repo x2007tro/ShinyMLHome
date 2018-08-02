@@ -80,7 +80,7 @@ observeEvent(input$dss_select, {
 ##
 observeEvent(input$dss_save, {
   ff <- input$dss_nname
-  WriteDataToADB(input$cgen_db_path, new_ds, input$dss_nname)
+  WriteDataToSSviaCS(input$cgen_db_path, new_ds, input$dss_nname)
   
   msg <- paste0("Data is saved at ",
                 format(Sys.Date(),"%Y-%m-%d")," ",
