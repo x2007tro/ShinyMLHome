@@ -75,10 +75,20 @@ localH2O <- h2o.init()
 ##
 # Directory parameters
 ##
-dev_dir <- paste0("C:/Users/",Sys.info()["user"], "/OneDrive/Development/")
-root_dir <- paste0(dev_dir, "Data Science/Projects/")
-proj_dir <- paste0(root_dir, "HomeCreditDefaultRisk/")
-shiny_dir <- paste0("C:/Users/Ke/Desktop/Data Science/ShinyMLHome/")
+
+#
+# Load trading class depending on OS
+#
+if(R.Version()$os == "linux-gnu"){
+  root_dir <- paste0("/home/",Sys.info()["user"], "/projects/")
+  proj_dir <- paste0(root_dir, "Data Science/HomeCreditDefaultRisk/")
+  shiny_dir <- paste0(root_dir,"ShinyMLHome/")
+} else {
+  dev_dir <- paste0("C:/Users/",Sys.info()["user"], "/OneDrive/Development/")
+  root_dir <- paste0(dev_dir, "Data Science/Projects/")
+  proj_dir <- paste0(root_dir, "HomeCreditDefaultRisk/")
+  shiny_dir <- paste0("C:/Users/",Sys.info()["user"],"/Desktop/Data Science/ShinyMLHome/")
+}
 
 ##
 # Load helpers
