@@ -413,7 +413,12 @@ observeEvent(input$mxgbtg_run, {
               # plot the learning curve
               mdl <- cv_sets[[cv_id]]
 			        mdl_lc <- mdl$evaluation_log
-			        FitPlot("xgboost tree", input$cgen_job_type, mdl_lc, "iter", "train_error", "test_error")
+			        if(input$cgen_job_type == "rg"){
+			          FitPlot("xgboost tree", input$cgen_job_type, mdl_lc, "iter", "train_rmse", "test_rmse")
+			        } else {
+			          FitPlot("xgboost tree", input$cgen_job_type, mdl_lc, "iter", "train_error", "test_error")
+			        }
+			        
             })
           }, i, cv_sets)
         })

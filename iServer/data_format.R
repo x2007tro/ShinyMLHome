@@ -99,7 +99,7 @@ observeEvent(input$dsf_format, {
 ##
 observeEvent(input$dsf_save, {
   ff <- input$dsf_nname
-  WriteDataToSSviaCS(input$cgen_db_path, ds_final, input$dss_nname)
+  WriteDataToSSviaCS(input$cgen_db_path, ds_final, input$dsf_nname)
   
   msg <- paste0("Data is saved at ",
                 format(Sys.Date(),"%Y-%m-%d")," ",

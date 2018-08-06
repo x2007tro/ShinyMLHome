@@ -3,7 +3,7 @@ tp_data_select <- tabPanel(
   fluidRow(
     column(
       tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Features")),
-      width = tp_wid_nar,
+      width = tp_wid_hlf,
       uiOutput("dss_features")
     ),
     column(
@@ -12,7 +12,7 @@ tp_data_select <- tabPanel(
       tags$div(
         style="padding:0px, margin:0px, height:50%",
         textInput("dss_nname", label = NULL, 
-                  value = "Predictors R**", 
+                  value = "ml_predictors**", 
                   width = file_dir_field_width)
       ),
       tags$div(
@@ -26,14 +26,14 @@ tp_data_select <- tabPanel(
   fluidRow(
     column(
       tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Predictors")),
-      width = tp_wid_wde,
+      width = 12,
       DT::dataTableOutput("dss_dts")
     )
   ),
   fluidRow(
     column(
       tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Predictor Specs")),
-      width = tp_wid_hlf,
+      width = tp_wid_wde + 2,
       DT::dataTableOutput("dss_ovw")
     ),
     column(

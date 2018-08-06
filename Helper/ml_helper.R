@@ -16,6 +16,7 @@ DataInspection <- function(dataset){
                       class = cls,
                       has_value = has_val,
                       miss_value = no_val,
+                      value_cnt = length(unique(subset)),
                       values = vals,
                       stringsAsFactors = FALSE)
     return(res)
@@ -34,10 +35,10 @@ OHEOneCol <- function(col_nm, dataset){
   vals <- unique(vals_l2)
   
   res <- matrix(0, nrow = nrow(dataset), ncol = length(vals))
-  colnames(res) <- vals
+  colnames(res) <- paste0(col_nm, "_", vals)
   
   for(i in 1:nrow(dataset)){
-      res[i, vals_l2[i]] <- 1
+      res[i, paste0(col_nm, "_", vals_l2[i])] <- 1
   }
   
   return(as.data.frame(res, stringsAsFactors = FALSE))
@@ -62,8 +63,16 @@ OHE <- function(col_nms, dataset){
 DataScaleOneCol <- function(col_nm, dataset, rep_na, rep_na_with){
   vals <- dataset[,col_nm]
   if(is.numeric(vals) | is.integer(vals)){
-    if(rep_na) vals[is.na(vals)] <- rep_na_with
-    res <- scale(vals, mean(vals, na.rm = TRUE), sd(vals, na.rm = TRUE))
+    if(min(vals, na.rm = TRUE) < 0 & max(vals, na.rm = TRUE) > 1){
+      rnk <- rank(vals, ties.method = "average")
+      unif_converter <- function(x){(x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))}
+      res <- unif_converter(rnk)
+      
+      res <- round(res, 5)
+    } else {
+      res <- vals
+    }
+    if(rep_na) res[is.na(res)] <- rep_na_with
   } else {
     res <- vals
     print(paste0("Warning: Feature ", col_nm, " is not scaled due to non-numeric format!"))
@@ -369,6 +378,7 @@ PredictMe <- function(model, data, label = c(), job,
     }
   } else if(model_name == "xgbtree"){
     # -- xgbtree model
+    ori_label <- label
     label <- SwapTargetType(label, tgt_map, "NumTarget", "StrTarget")
 	  label <- as.factor(label)
     if(job == "bc"){
@@ -408,6 +418,7 @@ PredictMe <- function(model, data, label = c(), job,
     }
   } else if(model_name == "tensorflow"){
     # -- tensorflow model
+    ori_label <- label
     label <- SwapTargetType(label, tgt_map, "NumTarget", "StrTarget")
     label <- as.factor(label)
     if(job == "bc"){
@@ -449,10 +460,17 @@ PredictMe <- function(model, data, label = c(), job,
     
   }
 
+  if(job == "bc" | job == "mc") {
+    # calc accurary
+    accr_tmp <- sum(as.numeric(pred == label), na.rm = TRUE)/length(pred)
+  } else {
+    # calc sum square error
+    accr_tmp <- sum((pred - ori_label)^2)
+  }
   res <- list(
     prob = probs,
     pred = pred,
-    accr = sum(as.numeric(pred == label), na.rm = TRUE)/length(pred),
+    accr = accr_tmp,
     na_pred = sum(as.numeric(is.na(pred)))/length(pred),
     cf = cf$table
   )

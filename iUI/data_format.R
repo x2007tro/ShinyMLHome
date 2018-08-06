@@ -3,9 +3,9 @@ tp_data_format <- tabPanel(
   fluidRow(
     column(
       tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Features")),
-      width = tp_wid_nar,
+      width = tp_wid_hlf,
       selectInput("dsf_format_choice", label = "Options", choices = format_options,
-                  multiple = TRUE, selectize = TRUE, selected = format_options),
+                  multiple = TRUE, selectize = TRUE, selected = format_options, width = "800px"),
       uiOutput("dsf_ex_cols"),
       actionButton("dsf_format", "Format", width = blotter_field_default_width)
     ),
@@ -29,14 +29,14 @@ tp_data_format <- tabPanel(
   fluidRow(
     column(
       tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Predictors")),
-      width = tp_wid_wde,
+      width = 12,
       DT::dataTableOutput("dsf_dts")
     ) 
   ),
   fluidRow(
     column(
       tags$div(class = "title_wrapper", tags$h6(class = "title_content_sm", "Predictor Specs")),
-      width = tp_wid_hlf,
+      width = tp_wid_wde+2,
       DT::dataTableOutput("dsf_ovw")
     ),
     column(

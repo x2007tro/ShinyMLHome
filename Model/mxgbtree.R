@@ -242,8 +242,8 @@ CrossValXgbtree2 <- function(proj = "",
                     num_of_trees, early_stop) %>% 
     summarise(
       avg_na_perc = mean(na_perc, na.rm = TRUE),
-      avg_loss = -1,
-      std_loss = -1,
+      #avg_loss = -1,
+      #std_loss = -1,
       avg_acc = mean(accuracy, na.rm = TRUE),
       std_acc = ifelse(n() == 1, -1, format(sd(accuracy, na.rm = TRUE), digits = 2))
     )
@@ -330,11 +330,19 @@ TrainXgbtree2 <- function(proj_nm = "",
   valp <- PredictMe(mdl, mdl_vads, mdl_val, mdl_job, model_name = model_name, tgt_map = tgt_map)
   
   # Save prediction
-  pred_df <- data.frame(
-    index = c(tr_idx, val_idx),
-    prob = rbind(trp$prob, valp$prob),
-    pred = c(trp$pred, valp$pred)
-  )
+  if(mdl_job == "bc" | mdl_job == "mc"){
+    pred_df <- data.frame(
+      index = c(tr_idx, val_idx),
+      prob = rbind(trp$prob, valp$prob),
+      pred = c(trp$pred, valp$pred)
+    )
+  } else {
+    pred_df <- data.frame(
+      index = c(tr_idx, val_idx),
+      pred = c(trp$pred, valp$pred)
+    )
+  }
+  
   SavePrediction(pred_df, mdl_optd, model_name, stc_pars$save_pred)
   
   # save model
@@ -402,9 +410,9 @@ CoreTrainXgbtree2 <- function(x, y, x_val, y_val, pars,
   ##
   if(job == "bc"){
     mdl_lsf <- "binary:logistic"
-  } else if (mdl_job == "mc"){
+  } else if (job == "mc"){
     mdl_lsf <- "multi:softprob"
-  } else if (mdl_job == "rg"){
+  } else if (job == "rg"){
     mdl_lsf <- "reg:linear"
   } else {
     print("Error: undefined training job type!")
