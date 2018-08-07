@@ -123,13 +123,13 @@ blotter_field_default_width <- "100px"
 ##
 # General parameters
 ##
-jt <- c("bc", "mc", "reg")
+jt <- c("bc", "mc", "rg")
 image_dim <- c(640, 480)   # width, height
 proj_db_name <- "HomeLoanDefaultRisk"
 db_par_tbl <- "input01_parameters"
 db_target_map <- "input02_target_map"
-db_target_src <- "700_020_mlfeed_sample_target_cash01"
-db_predictors_src <- "predictors_r01"
+db_target_src <- "sample_target"
+db_predictors_src <- "sample_predictors01_scaled_ohe"
 
 ##
 # initialize project variable
