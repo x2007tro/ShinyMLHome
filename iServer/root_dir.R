@@ -6,7 +6,7 @@ observeEvent({
   input$cgen_proj_name
 }, {
   tryCatch({
-    setwd(paste0(input$cgen_root_dir, input$cgen_proj_name, "/"))  
+    setwd(proj_dir)  
   },
   error=function(cond) {
     print("Here's the original error message:")
