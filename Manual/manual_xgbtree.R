@@ -12,10 +12,10 @@ run_test <- FALSE
 ##
 # training parameters
 tuning_pars <- expand.grid(
-  eta = c(1,5),
-  gamma = c(0.1, 1),
+  eta = c(0.01),
+  gamma = c(0),
   max_depth = c(30),
-  min_child_weight = c(10),
+  min_child_weight = c(1),
   subsample = c(1),
   colsample_bytree = c(1),
   nrounds = c(100),
@@ -31,10 +31,11 @@ static_pars <- data.frame(
   save_res = FALSE,
   stringsAsFactors = FALSE
 )
+all_models <- c("xgbtree")
 
 ##
 # Load required source files and data
-source(paste0(mlh_dir, "global.R"))
+# source(paste0(mlh_dir, "global.R"))
 load(paste0(proj_dir, dataset_nm, ".RData"))
 
 ##
@@ -50,10 +51,10 @@ ifelse(length(rmv_fs) == 0,
 ##
 # Scale and OHE
 prdctrs1_peek <- DataInspection(prdctrs1)
-num_cols <- dpeek[dpeek$class != "character","feature"]
-chr_cols <- dpeek[dpeek$class == "character","feature"]
+num_cols <- prdctrs1_peek[prdctrs1_peek$class != "character","feature"]
+chr_cols <- prdctrs1_peek[prdctrs1_peek$class == "character","feature"]
 
-data_scaled <- DataScale(num_cols, pdctrs2, rep_na = TRUE, rep_na_with = 0)
+data_scaled <- DataScale(num_cols, prdctrs1, rep_na = TRUE, rep_na_with = 0)
 data_scaled_ohe <- OHE(chr_cols, data_scaled)
 prdctrs2_peek <- DataInspection(data_scaled_ohe)   # info only
 
@@ -81,3 +82,31 @@ br <- GridSearchXgbtree2(
   stc_pars = static_pars,    # list
   tgt_map = tgt_map
 )
+
+##
+# Present result
+score_board <- res$score_board
+cong_matrix <- res$valdn_results[[1]][[1]]$cf
+
+##
+# Variable importance
+raw_meat <- xgboost::xgb.importance(model = res[[1]][[1]])
+features <- colnames(fmtd_data$predictors)
+var_imp <- data.frame(
+  variable = features[as.numeric(raw_meat$Feature)+1],
+  importance = raw_meat$Gain,
+  stringsAsFactors = FALSE
+)
+
+##
+# Plot learning curve
+mdl_lc <- res[[1]][[1]]$evaluation_logFitPlot("xgboost tree", input$cgen_job_type, mdl_lc, "iter", "train_error", "test_error")
+
+##
+# Run test data
+##
+if(run_test){
+  
+  
+  
+}
