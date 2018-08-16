@@ -21,6 +21,9 @@ if(!("rBayesianOptimization" %in% rownames(installed.packages()))) { install.pac
 if(!("RODBC" %in% rownames(installed.packages()))) { install.packages("RODBC") }
 if(!("DBI" %in% rownames(installed.packages()))) { install.packages("DBI") }
 if(!("odbc" %in% rownames(installed.packages()))) { install.packages("odbc") }
+if(!("DMwR" %in% rownames(installed.packages()))) { install.packages("DMwR") }
+if(!("ROSE" %in% rownames(installed.packages()))) { install.packages("ROSE") }
+if(!("ROCR" %in% rownames(installed.packages()))) { install.packages("ROCR") }
 
 # machine learning
 if(!("caret" %in% rownames(installed.packages()))) { devtools::install_github('topepo/caret/pkg/caret') }
@@ -65,7 +68,7 @@ library(naivebayes)
 library(randomForest)
 library(RRF)
 library(h2o)
-localH2O <- h2o.init()
+# localH2O <- h2o.init()
 
 # install keras if not installed
 # install_keras(

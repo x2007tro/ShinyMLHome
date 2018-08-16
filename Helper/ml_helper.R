@@ -32,6 +32,15 @@ OHEOneCol <- function(col_nm, dataset){
   vals_l1 <- dataset[,col_nm]
   vals_l1[is.na(vals_l1) | vals_l1 == ""] <- paste0(col_nm, "_unknown")
   vals_l2 <- vals_l1
+  
+  ##
+  # perform replacement
+  vals_l2 <- gsub(",", "_", vals_l2)
+  vals_l2 <- gsub(" ", "_", vals_l2)
+  vals_l2 <- gsub("-", "_", vals_l2)
+  vals_l2 <- gsub(" / ", "_", vals_l2)
+  vals_l2 <- gsub("/", "_", vals_l2)
+  
   vals <- unique(vals_l2)
   
   res <- matrix(0, nrow = nrow(dataset), ncol = length(vals))
@@ -41,6 +50,7 @@ OHEOneCol <- function(col_nm, dataset){
       res[i, paste0(col_nm, "_", vals_l2[i])] <- 1
   }
   
+  gc()
   return(as.data.frame(res, stringsAsFactors = FALSE))
 }
 
@@ -64,7 +74,7 @@ DataScaleOneCol <- function(col_nm, dataset, rep_na, rep_na_with){
   vals <- dataset[,col_nm]
   if(is.numeric(vals) | is.integer(vals)){
     if(min(vals, na.rm = TRUE) < 0 & max(vals, na.rm = TRUE) > 1){
-      rnk <- rank(vals, ties.method = "average")
+      rnk <- rank(vals, ties.method = "average", na.last = TRUE)
       unif_converter <- function(x){(x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))}
       res <- unif_converter(rnk)
       

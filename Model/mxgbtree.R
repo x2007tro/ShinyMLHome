@@ -404,6 +404,7 @@ CoreTrainXgbtree2 <- function(x, y, x_val, y_val, pars,
   ##
   dm_strain <- xgboost::xgb.DMatrix(data = x, label = y)
   dm_valdn <- xgboost::xgb.DMatrix(data = x_val, label = y_val)
+  skew_wgt <- sum(y == unique(y)[1])/sum(y == unique(y)[2])
   
   ##
   # set objective function
@@ -450,6 +451,7 @@ CoreTrainXgbtree2 <- function(x, y, x_val, y_val, pars,
                               objective = mdl_lsf,
                               nrounds = pars[1, "nrounds"],
                               early_stopping_rounds = pars[1, "stopping_round"],
+                              scale_pos_weight = 11,
                               watchlist = list(train=dm_strain, test=dm_valdn),
                               verbose = 1)
   }
