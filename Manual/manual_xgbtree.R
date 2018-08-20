@@ -2,26 +2,28 @@
 # Manual training for xgbtree model
 ##
 
-##
-# Saving data
-##
-full_testdata <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "ml_test_predictors")
-full_predictors <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "ml_train_predictors01")
-full_target <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "ml_train_target")
-tgt_map <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "input02_target_map")
-save(full_predictors, full_target, full_testdata, tgt_map, file = "hcdr_full03.RData")
+# ##
+# # Saving data
+# ##
+# full_testdata <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "ml_test_predictors")
+# full_predictors <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "ml_train_predictors01")
+# full_target <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "ml_train_target")
+# tgt_map <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "input02_target_map")
+# save(full_predictors, full_target, full_testdata, tgt_map, all_models, file = "hcdr_full04.RData")
 
 ##
 # first things first, parameters
 mlh_dir <- paste0("C:/Users/",Sys.info()["user"],"/Desktop/Data Science/ShinyMLHome/")
 n_val_size <- 0.1
-dataset_nm <- c("hcdr_sample","hcdr_full02")[2]
-rmv_fs <- c('SK_ID_CURR', 'NAME_TYPE_SUITE', 'HOUR_APPR_PROCESS_START', 'FLAG_MOBIL', 
-            'FLAG_CONT_MOBILE', 'FLAG_DOCUMENT_2', 'FLAG_DOCUMENT_4', 
-            'FLAG_DOCUMENT_7', 'FLAG_DOCUMENT_10', 
-            'FLAG_DOCUMENT_12', 'FLAG_DOCUMENT_14', 'FLAG_DOCUMENT_15', 
-            'FLAG_DOCUMENT_17', 'FLAG_DOCUMENT_19', 
-            'FLAG_DOCUMENT_20', 'FLAG_DOCUMENT_21', 'appl_process_weekday')
+dataset_nm <- c("hcdr_sample","hcdr_full03")[2]
+# rmv_fs <- c('SK_ID_CURR', 'NAME_TYPE_SUITE', 'HOUR_APPR_PROCESS_START', 'FLAG_MOBIL', 
+#             'FLAG_CONT_MOBILE', 'FLAG_DOCUMENT_2', 'FLAG_DOCUMENT_4', 
+#             'FLAG_DOCUMENT_7', 'FLAG_DOCUMENT_10', 
+#             'FLAG_DOCUMENT_12', 'FLAG_DOCUMENT_14', 'FLAG_DOCUMENT_15', 
+#             'FLAG_DOCUMENT_17', 'FLAG_DOCUMENT_19', 
+#             'FLAG_DOCUMENT_20', 'FLAG_DOCUMENT_21', 'appl_process_weekday')
+
+rmv_fs <- c('SK_ID_CURR')
 
 run_test <- FALSE
 smote_flag <- FALSE
@@ -488,9 +490,9 @@ tuning_pars <- expand.grid(
   gamma = c(0),
   max_depth = c(30),
   min_child_weight = c(1),
-  subsample = c(0.5),
-  colsample_bytree = c(0.5),
-  nrounds = c(50),
+  subsample = c(0.8),
+  colsample_bytree = c(0.8),
+  nrounds = c(175),
   stopping_rounds = c(1000)
 )
 
@@ -513,8 +515,6 @@ full_target <- full_target[, , drop = FALSE]
 full_predictors <- full_predictors[, , drop = FALSE]
 
 full_predictors <- AddFeatures(full_predictors, do = TRUE)
-#full_predictors <- full_predictors %>% select(EXT_SOURCE_1, EXT_SOURCE_2, 
-#                                              EXT_SOURCE_3, sim_credit_score)
 
 ##
 # Take validation set
@@ -537,6 +537,198 @@ gc()
 prdctrs_train <- FinalTouch(rem_predictors[,], rmv_fs)
 train_peek1 <- prdctrs_train$peek1
 train_peek2 <- prdctrs_train$peek2
+
+##
+# Remove non-important features
+rmv_fs_vi <- c(
+  "eqw_min_papl_goods_cat_photo_cinema_equipment",
+  "eqw_avg_papl_seller_indsty_jewelry",
+  "OCCUPATION_TYPE_Private_service_staff",
+  "eqw_min_papl_seller_indsty_industry",
+  "eqw_max_papl_goods_cat_jewelry",
+  "eqw_max_papl_type_suite_group_of_people",
+  "eqw_avg_b_amt_credit_sum_overdue",
+  "eqw_min_papl_loan_purpose_xna",
+  "appl_org_type_Military",
+  "eqw_min_papl_prod_comb_pos_mobile_without_interest",
+  "eqw_max_papl_prod_type_x_sell",
+  "eqw_min_papl_goods_cat_construction_materials",
+  "eqw_max_papl_seller_indsty_xna",
+  "appl_org_type_Agriculture",
+  "eqw_max_papl_goods_cat_other",
+  "eqw_min_papl_type_suite_other_b",
+  "eqw_min_papl_goods_cat_clothing_and_accessories",
+  "eqw_max_papl_portfolio_cards",
+  "eqw_min_pcb_avg_dpd",
+  "eqw_min_papl_yield_grp_low_action",
+  "eqw_avg_papl_goods_cat_other",
+  "eqw_min_ccf_mxdpd",
+  "eqw_avg_papl_goods_cat_sport_and_leisure",
+  "eqw_max_papl_goods_cat_sport_and_leisure",
+  "eqw_avg_papl_goods_cat_medical_supplies",
+  "eqw_max_papl_goods_cat_vehicles",
+  "eqw_avg_papl_goods_cat_gardening",
+  "appl_org_type_Services",
+  "eqw_max_papl_goods_cat_homewares",
+  "eqw_avg_papl_goods_cat_vehicles",
+  "eqw_avg_papl_portfolio_cash",
+  "eqw_min_papl_prod_type_walk_in",
+  "eqw_avg_papl_prod_comb_pos_others_without_interest",
+  "eqw_max_papl_goods_cat_medical_supplies",
+  "eqw_max_papl_goods_cat_office_appliances",
+  "eqw_max_ccf_mxdpd_serious",
+  "eqw_min_papl_loan_purpose_xap",
+  "eqw_min_papl_prod_comb_cash_street_high",
+  "eqw_min_papl_channel_type_ap_cash_loan",
+  "eqw_max_papl_seller_indsty_jewelry",
+  "eqw_min_papl_prod_type_x_sell",
+  "eqw_min_papl_loan_purpose_repairs",
+  "eqw_min_papl_prod_comb_pos_other_with_interest",
+  "appl_org_type_Restaurant",
+  "OCCUPATION_TYPE_Waiters_barmen_staff",
+  "eqw_max_papl_portfolio_pos",
+  "eqw_max_papl_loan_purpose_xna",
+  "eqw_avg_ccf_dpd_occur_pct",
+  "eqw_max_papl_loan_purpose_xap",
+  "eqw_max_papl_loan_purpose_medicine",
+  "eqw_min_papl_prod_type_xna",
+  "eqw_max_papl_prod_comb_pos_others_without_interest",
+  "NAME_HOUSING_TYPE_Co_op_apartment",
+  "appl_org_type_Housing",
+  "eqw_min_ccf_mxdpd_serious",
+  "OCCUPATION_TYPE_Secretaries",
+  "appl_org_type_Police",
+  "eqw_avg_pcb_avg_dpd_serious",
+  "eqw_min_papl_channel_type_credit_and_cash_offices",
+  "eqw_max_papl_loan_purpose_buying_a_used_car",
+  "eqw_min_papl_portfolio_cash",
+  "eqw_min_papl_seller_indsty_clothing",
+  "eqw_avg_papl_prod_type_xna",
+  "eqw_max_papl_channel_type_channel_of_corporate_sales",
+  "appl_org_type_Realtor",
+  "eqw_max_papl_goods_cat_medicine",
+  "eqw_max_papl_loan_purpose_education",
+  "eqw_avg_papl_goods_cat_medicine",
+  "eqw_max_papl_portfolio_cash",
+  "eqw_max_ccf_avg_dpd",
+  "appl_org_type_Telecom",
+  "eqw_min_papl_goods_cat_medicine",
+  "eqw_min_papl_goods_cat_jewelry",
+  "appl_org_type_Insurance",
+  "eqw_max_papl_goods_cat_gardening",
+  "OCCUPATION_TYPE_Realty_agents",
+  "eqw_min_papl_goods_cat_xna",
+  "appl_org_type_Legal_Services",
+  "eqw_min_papl_seller_indsty_auto_technology",
+  "appl_org_type_Electricity",
+  "eqw_min_papl_pmt_type_non_cash_from_your_account",
+  "eqw_min_papl_prod_comb_cash_street_middle",
+  "eqw_avg_papl_goods_cat_office_appliances",
+  "eqw_avg_papl_portfolio_pos",
+  "appl_org_type_Hotel",
+  "eqw_avg_ccf_mxdpd",
+  "eqw_min_papl_goods_cat_tourism",
+  "eqw_max_papl_loan_purpose_building_a_house_or_an_annex",
+  "eqw_min_papl_goods_cat_homewares",
+  "eqw_min_papl_prod_comb_pos_industry_without_interest",
+  "eqw_min_papl_channel_type_contact_center",
+  "eqw_avg_papl_loan_purpose_everyday_expenses",
+  "appl_org_type_Advertising",
+  "eqw_min_papl_goods_cat_auto_accessories",
+  "eqw_min_papl_goods_cat_medical_supplies",
+  "eqw_min_papl_prod_comb_cash_x_sell_middle",
+  "eqw_avg_papl_type_suite_group_of_people",
+  "eqw_min_papl_seller_indsty_xna",
+  "eqw_min_papl_goods_cat_direct_sales",
+  "eqw_avg_papl_loan_purpose_education",
+  "eqw_max_papl_loan_purpose_everyday_expenses",
+  "eqw_min_papl_loan_purpose_urgent_needs",
+  "eqw_avg_papl_goods_cat_tourism",
+  "eqw_min_pcb_avg_dpd_serious",
+  "eqw_max_papl_goods_cat_direct_sales",
+  "OCCUPATION_TYPE_IT_staff",
+  "eqw_min_papl_portfolio_pos",
+  "eqw_max_papl_loan_purpose_car_repairs",
+  "eqw_avg_papl_loan_purpose_purchase_of_electronic_equipment",
+  "eqw_avg_papl_loan_purpose_medicine",
+  "eqw_min_papl_loan_purpose_other",
+  "eqw_avg_papl_seller_indsty_mlm_partners",
+  "eqw_max_papl_loan_purpose_purchase_of_electronic_equipment",
+  "eqw_max_papl_prod_type_xna",
+  "eqw_min_b_cnt_credit_prelong",
+  "eqw_max_papl_client_type_xna",
+  "eqw_max_papl_goods_cat_additional_service",
+  "eqw_max_papl_loan_purpose_buying_a_new_car",
+  "appl_org_type_Emergency",
+  "eqw_max_papl_loan_purpose_journey",
+  "eqw_avg_ccf_overdrawn_occur_pct",
+  "eqw_avg_papl_yield_grp_xna",
+  "eqw_min_papl_goods_cat_vehicles",
+  "eqw_max_papl_yield_grp_xna",
+  "eqw_max_papl_loan_purpose_buying_a_home",
+  "eqw_avg_papl_loan_purpose_buying_a_used_car",
+  "eqw_max_papl_loan_purpose_wedding_gift_holiday",
+  "OCCUPATION_TYPE_HR_staff",
+  "eqw_min_papl_prod_comb_cash_x_sell_high",
+  "eqw_min_papl_prod_comb_cash_x_sell_low",
+  "eqw_max_papl_pmt_type_cashless_from_the_account_of_the_employer",
+  "eqw_avg_papl_goods_cat_direct_sales",
+  "eqw_min_papl_goods_cat_sport_and_leisure",
+  "eqw_max_papl_goods_cat_insurance",
+  "eqw_min_papl_loan_purpose_medicine",
+  "eqw_max_papl_loan_purpose_payments_on_other_loans",
+  "eqw_avg_papl_loan_purpose_journey",
+  "eqw_avg_papl_pmt_type_cashless_from_the_account_of_the_employer",
+  "eqw_max_papl_seller_indsty_tourism",
+  "eqw_avg_papl_channel_type_channel_of_corporate_sales",
+  "eqw_min_papl_type_suite_other_a",
+  "eqw_min_papl_loan_purpose_purchase_of_electronic_equipment",
+  "eqw_max_papl_seller_indsty_mlm_partners",
+  "eqw_min_papl_seller_indsty_tourism",
+  "eqw_max_papl_channel_type_car_dealer",
+  "eqw_max_papl_goods_cat_weapon",
+  "eqw_avg_ccf_mxdpd_serious",
+  "eqw_avg_bb_avg_dpd",
+  "eqw_min_papl_portfolio_cards",
+  "eqw_avg_papl_client_type_xna",
+  "eqw_avg_papl_goods_cat_insurance",
+  "eqw_max_papl_goods_cat_fitness",
+  "eqw_max_papl_goods_cat_tourism",
+  "eqw_min_ccf_avg_dpd",
+  "eqw_max_papl_portfolio_cars",
+  "eqw_max_papl_xna_loan_ref_pct",
+  "eqw_avg_papl_loan_purpose_wedding_gift_holiday",
+  "eqw_min_papl_type_suite_group_of_people",
+  "eqw_min_papl_seller_indsty_jewelry",
+  "eqw_avg_papl_loan_purpose_furniture",
+  "eqw_min_papl_prod_comb_cash_street_low",
+  "eqw_max_papl_loan_purpose_business_development",
+  "eqw_avg_papl_loan_purpose_payments_on_other_loans",
+  "eqw_max_b_bad_credit",
+  "eqw_min_papl_loan_purpose_journey",
+  "eqw_min_papl_loan_purpose_building_a_house_or_an_annex",
+  "eqw_avg_papl_loan_purpose_buying_a_home",
+  "eqw_min_papl_prod_comb_card_x_sell",
+  "eqw_avg_papl_seller_indsty_tourism",
+  "eqw_max_papl_loan_purpose_refusal_to_name_the_goal",
+  "eqw_min_papl_loan_purpose_refusal_to_name_the_goal",
+  "eqw_min_papl_loan_purpose_car_repairs",
+  "eqw_min_papl_goods_cat_office_appliances",
+  "eqw_min_papl_prod_comb_pos_others_without_interest",
+  "eqw_min_papl_prod_comb_card_street",
+  "eqw_min_papl_loan_purpose_everyday_expenses",
+  "eqw_min_papl_goods_cat_other",
+  "NAME_EDUCATION_TYPE_Academic_degree",
+  "eqw_max_ccf_avg_dpd_serious",
+  "eqw_min_b_credit_day_overdue",
+  "eqw_min_papl_loan_purpose_buying_a_used_car",
+  "eqw_min_papl_xna_loan_ref_pct",
+  "eqw_max_papl_loan_purpose_gasification_water_supply",
+  "eqw_avg_papl_loan_purpose_buying_a_holiday_home_land",
+  "eqw_min_b_amt_credit_sum_overdue",
+  "eqw_min_papl_yield_grp_xna",
+  "eqw_avg_ccf_avg_dpd")
+#prdctrs_train$coredata <- prdctrs_train$coredata %>% select(-one_of(rmv_fs_vi))
 
 ##
 # SMOTE data so the data can be balanced
@@ -563,6 +755,9 @@ fmtd_data <- FormatData4Model(
   model = "xgbtree"
 )
 
+# save(fmtd_data, val_predictors, val_target, tuning_pars, static_pars, tgt_map, file = "fmtd_data.RData")
+# load("fmtd_data.RData")
+
 ##
 # Train
 br <- GridSearchXgbtree2(
@@ -571,7 +766,7 @@ br <- GridSearchXgbtree2(
   dataset = fmtd_data$predictors,
   labels = fmtd_data$target,
   job = "bc",
-  val_size = floor(length(fmtd_data$target)/10),
+  val_size = floor(length(fmtd_data$target)/20),
   cv_rep = 1,
   mdl_pars = tuning_pars,   # data.frame
   stc_pars = static_pars,    # list
@@ -598,6 +793,8 @@ var_imp <- data.frame(
 mdl_lc <- FitPlot("xgboost tree", "bc", 
                   br$models[[1]][[1]]$evaluation_log, "iter", "train_error", "test_error")
 mdl_lc
+rm(fmtd_data)
+gc()
 
 ##
 # Run validation set
