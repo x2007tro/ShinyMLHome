@@ -133,7 +133,7 @@ FormatData4Model <- function(prdctrs, tgt, tgt_map,
          mdl_nm == "ada_boost" | mdl_nm == "random_forest" | mdl_nm == "gbm_h2o"){
         # if above models, target should be factors
         new_tgt <- as.factor(tgt)
-      } else if (mdl_nm == "xgbtree" | mdl_nm == "tensorflow"){
+      } else if (mdl_nm == "xgbtree" | mdl_nm == "tensorflow" | mdl_nm == "lightgbm"){
         # if xgbtree, target should be numerical
         new_tgt <- SwapTargetType(tgt = tgt, tgt_map = tgt_map, from_nm = "StrTarget", to_nm = "NumTarget")
         tgt_nm <- "NumTarget"
@@ -165,7 +165,7 @@ FormatData4Model <- function(prdctrs, tgt, tgt_map,
       prdctrs[,i] <- tmp_mod
     }
     new_prdctrs <- prdctrs
-  } else if (mdl_nm == "xgbtree" | mdl_nm == "tensorflow") {
+  } else if (mdl_nm == "xgbtree" | mdl_nm == "tensorflow" | mdl_nm == "lightgbm") {
     # data has to be matrix - force formatting
     prdctrs2 <- ToNumeric(colnames(prdctrs), prdctrs)
     new_prdctrs <- as.matrix(prdctrs2) * 1.0
@@ -420,6 +420,46 @@ PredictMe <- function(model, data, label = c(), job,
       })
 	    cf <- data.frame(f1 = character(0))
 	} else if (job == "rg") {
+      probs <- data.frame(f1 = character(0))
+      pred <- predict(model, data, reshape = FALSE)
+      cf <- data.frame(f1 = character(0))
+    } else {
+      # do nothing
+    }
+  } else if(model_name == "lightgbm"){
+    # -- xgbtree model
+    ori_label <- label
+    label <- SwapTargetType(label, tgt_map, "NumTarget", "StrTarget")
+    label <- as.factor(label)
+    if(job == "bc"){
+      ##
+      # computer probability and prediction
+      prob <- predict(model, data, reshape = FALSE)
+      probs <- data.frame(x1 = 1 - prob, x2 = prob)
+      colnames(probs) <- levels(label)
+      
+      ##
+      # manipulate pred vector
+      pred <- prob
+      pred <- sapply(1:length(pred), function(i){ 
+        if(pred[i] <= 0.5) levels(label)[1] else levels(label)[2]
+      })
+      pred_fac <- as.factor(pred)
+      
+      ##
+      # confusion matrix
+      cf <- caret::confusionMatrix(pred_fac, label)
+    } else if (job == "mc") {
+      ##
+      # computer probability and prediction
+      probs <- predict(model, data, reshape = TRUE)
+      colnames(probs) <- levels(label)
+      pred <- sapply(1:nrow(probs), function(i){
+        x <- probs[i,]
+        levels(label)[which(x == max(x))]
+      })
+      cf <- data.frame(f1 = character(0))
+    } else if (job == "rg") {
       probs <- data.frame(f1 = character(0))
       pred <- predict(model, data, reshape = FALSE)
       cf <- data.frame(f1 = character(0))

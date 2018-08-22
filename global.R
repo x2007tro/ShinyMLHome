@@ -84,7 +84,7 @@ library(h2o)
 #
 if(R.Version()$os == "linux-gnu"){
   root_dir <- paste0("/home/",Sys.info()["user"], "/projects/")
-  proj_dir <- paste0(root_dir, "Data Science/HomeCreditDefaultRisk/")
+  proj_dir <- paste0(root_dir, "Data Science/HomeLoanDefaultRisk/")
   shiny_dir <- paste0(root_dir,"ShinyMLHome/")
 } else {
   dev_dir <- paste0("C:/Users/",Sys.info()["user"], "/OneDrive/Development/")
@@ -106,7 +106,7 @@ source(paste0(shiny_dir, "Model/mnaivebayes.R"))
 source(paste0(shiny_dir, "Model/madaboost.R"))
 source(paste0(shiny_dir, "Model/mrandomforest.R"))
 source(paste0(shiny_dir, "Model/mgbmh2o.R"))
-
+source(paste0(shiny_dir, "Model/mlightgbm.R"))
 
 ##
 # UI parameters
@@ -157,6 +157,7 @@ mdl_db_nb_mp <- "* Input 14 : Naive Bayes Parameters *"
 mdl_db_ab_mp <- "* Input 15 : Adaptive Boosting Parameters *"
 mdl_db_rf_mp <- "* Input 16 : Random Forest Parameters *"
 mdl_db_gbm_mp <- "* Input 17 : GBM H2O Parameters *"
+mdl_db_lgbm_mp <- "* Input 18 : Light GBM Parameters *"
 
 model_output_specs <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_avl_mdls)
 all_models <- model_output_specs$model
@@ -170,6 +171,7 @@ rg_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_rg_mp)
 ab_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_ab_mp)
 rf_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_rf_mp)
 gbm_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_gbm_mp)
+lgbm_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_lgbm_mp)
 
 ##
 # Parameters for data panel
