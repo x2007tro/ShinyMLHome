@@ -152,7 +152,7 @@ static_pars <- list(
 
 ##
 # Select features
-prdctrs_sltd <- fmtd_train$predictors[, top_feats_all]
+prdctrs_sltd <- fmtd_train$predictors[, top_feats_all[1:550]]
 tgts <- fmtd_train$target
 rm(fmtd_train)
 gc()
@@ -197,7 +197,7 @@ gc()
 
 ##
 # Predict
-val_prdctrs_sltd <- fmtd_vald$predictors[, top_feats_all]
+val_prdctrs_sltd <- fmtd_vald$predictors[, top_feats_all[1:550]]
 val_tgts <- fmtd_vald$target
 rm(fmtd_vald)
 gc()
@@ -217,7 +217,7 @@ if(TRUE){
   rm(fmtd_train, fmtd_vald)
   gc()
   
-  test_prdctrs_sltd <- prdctrs_test$coredata[, top_feats_all]
+  test_prdctrs_sltd <- prdctrs_test$coredata[, top_feats_all[1:550]]
   rm(prdctrs_test)
   gc()
   
