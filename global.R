@@ -107,6 +107,7 @@ source(paste0(shiny_dir, "Model/madaboost.R"))
 source(paste0(shiny_dir, "Model/mrandomforest.R"))
 source(paste0(shiny_dir, "Model/mgbmh2o.R"))
 source(paste0(shiny_dir, "Model/mlightgbm.R"))
+source(paste0(proj_dir, "Helper/feature_manipulation.R"))
 
 ##
 # UI parameters
