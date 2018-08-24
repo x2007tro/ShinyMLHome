@@ -152,7 +152,7 @@ static_pars <- list(
 
 ##
 # Select features
-prdctrs_sltd <- fmtd_train$predictors[, top_feats_100]
+prdctrs_sltd <- fmtd_train$predictors[, top_feats_all]
 tgts <- fmtd_train$target
 rm(fmtd_train)
 gc()
@@ -192,12 +192,12 @@ eval_res <- data.frame(
 mdl_lc <- FitPlot("lightgbm tree", "bc",
                   eval_res, "iter", "train_logloss", "test_logloss")
 mdl_lc
-rm(fmtd_data)
+rm(fmtd_train)
 gc()
 
 ##
 # Predict
-val_prdctrs_sltd <- fmtd_vald$predictors[, top_feats_100]
+val_prdctrs_sltd <- fmtd_vald$predictors[, top_feats_all]
 val_tgts <- fmtd_vald$target
 rm(fmtd_vald)
 gc()
@@ -212,19 +212,19 @@ print(rocr_perf@y.values)
 ##
 if(TRUE){
   
-  rm(fmtd_data, fmtd_vald)
+  rm(fmtd_train, fmtd_vald)
   load("fmtd_data03.RData")
-  rm(fmtd_data, fmtd_vald)
+  rm(fmtd_train, fmtd_vald)
   gc()
   
-  test_prdctrs_sltd <- prdctrs_test$coredata[, top_feats_100]
+  test_prdctrs_sltd <- prdctrs_test$coredata[, top_feats_all]
   rm(prdctrs_test)
   gc()
   
   ##
   # Load model
   # load(paste0(proj_dir, "Output/Model/", mdl_nm))
-  pred_res <- predict(br$models[[1]][[1]], as.matrix(prdctrs_test$coredata))
+  pred_res <- predict(br$models[[1]][[1]], as.matrix(test_prdctrs_sltd))
   pred_res2 <- as.data.frame(pred_res)
   
   out <- data.frame(SK_ID_CURR = test_id,
