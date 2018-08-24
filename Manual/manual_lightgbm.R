@@ -567,7 +567,11 @@
 # test_peek2 <- prdctrs_test$peek2
 
 # save(fmtd_data, fmtd_vald, tuning_pars, static_pars, tgt_map, file = "fmtd_data.RData")
+setwd(proj_dir)
 load("fmtd_data03.RData")
+load("lightgbm_5000n_features.RData")
+rm(prdctrs_test)
+gc()
 
 ##
 # training parameters
@@ -575,17 +579,17 @@ tuning_pars <- expand.grid(
   num_leaves = c(31),
   min_data_in_leaf = c(20),
   max_depth = c(-1),
-  bagging_fraction = c(1),
+  bagging_fraction = c(0.7),
   bagging_freq = c(0),
-  feature_fraction = c(1),
+  feature_fraction = c(0.7),
   max_bin = c(255),
   learning_rate = c(0.01),
-  num_iterations = c(200),
+  num_iterations = c(5000),
   lambda_l1 = c(0),
   lambda_l2 = c(0),
   min_gain_to_split = c(0),
   early_stopping_round = c(0),
-  num_threads = c(0)
+  num_threads = c(6)
 )
 
 ##
@@ -598,14 +602,21 @@ static_pars <- list(
 )
 
 ##
+# Select features
+prdctrs_sltd <- fmtd_data$predictors[, top_feats_100]
+tgts <- fmtd_data$target
+rm(fmtd_data)
+gc()
+
+##
 # Train
 br <- GridSearchLgbm2(
   proj = "HCDR",
   model_name = "lightgbm",
-  dataset = fmtd_data$predictors,
-  labels = fmtd_data$target,
+  dataset = prdctrs_sltd,
+  labels = tgts,
   job = "bc",
-  val_size = floor(length(fmtd_data$target)/20),
+  val_size = floor(length(tgts)/20),
   cv_rep = 1,
   mdl_pars = tuning_pars,   # data.frame
   stc_pars = static_pars,    # list
@@ -617,35 +628,49 @@ br <- GridSearchLgbm2(
 score_board <- br$score_board
 conf_matrix <- as.data.frame(br$valdn_results[[1]][[1]]$cf)
 
-# ##
-# # Variable importance
-# raw_meat <- xgboost::xgb.importance(model = br$models[[1]][[1]])
-# features <- colnames(fmtd_data$predictors)
-# var_imp <- data.frame(
-#   variable = features[as.numeric(raw_meat$Feature)+1],
-#   importance = raw_meat$Gain,
-#   stringsAsFactors = FALSE
-# )
-# 
-# ##
-# # Plot learning curve
-# mdl_lc <- FitPlot("xgboost tree", "bc", 
-#                   br$models[[1]][[1]]$evaluation_log, "iter", "train_error", "test_error")
-# mdl_lc
-# rm(fmtd_data)
+##
+# Variable importance
+var_imp <- lightgbm::lgb.importance(br$models[[1]][[1]])
+var_imp_plot <- lightgbm::lgb.plot.importance(var_imp, top_n = 10)
+
+##
+# Plot learning curve
+eval_res <- data.frame(
+  iter = 1:length(br$models[[1]][[1]]$record_evals$train$binary_logloss$eval),
+  train_logloss = unlist(br$models[[1]][[1]]$record_evals$train$binary_logloss$eval),
+  test_logloss = unlist(br$models[[1]][[1]]$record_evals$test$binary_logloss$eval)
+)
+mdl_lc <- FitPlot("lightgbm tree", "bc",
+                  eval_res, "iter", "train_logloss", "test_logloss")
+mdl_lc
+rm(fmtd_data)
 gc()
 
 ##
 # Predict
-val_pred <- predict(br$models[[1]][[1]], fmtd_vald$predictors)
-rocr_pred <- ROCR::prediction(val_pred, fmtd_vald$target)
+val_prdctrs_sltd <- fmtd_vald$predictors[, top_feats_100]
+val_tgts <- fmtd_vald$target
+rm(fmtd_vald)
+gc()
+
+val_pred <- predict(br$models[[1]][[1]], val_prdctrs_sltd)
+rocr_pred <- ROCR::prediction(val_pred, val_tgts)
 rocr_perf <- ROCR::performance(rocr_pred, measure = "auc")
-rocr_perf@y.values
+print(rocr_perf@y.values)
 
 ##
 # Run test data
 ##
-if(run_test){
+if(TRUE){
+  
+  rm(fmtd_data, fmtd_vald)
+  load("fmtd_data03.RData")
+  rm(fmtd_data, fmtd_vald)
+  gc()
+  
+  test_prdctrs_sltd <- prdctrs_test$coredata[, top_feats_100]
+  rm(prdctrs_test)
+  gc()
   
   ##
   # Load model
@@ -653,7 +678,7 @@ if(run_test){
   pred_res <- predict(br$models[[1]][[1]], as.matrix(prdctrs_test$coredata))
   pred_res2 <- as.data.frame(pred_res)
   
-  out <- data.frame(SK_ID_CURR = full_testdata$SK_ID_CURR,
+  out <- data.frame(SK_ID_CURR = test_id,
                     TARGET = pred_res2[,1],
                     stringsAsFactors = FALSE)
   write.csv(out, paste0(proj_dir, "Submission/",
@@ -661,3 +686,5 @@ if(run_test){
                         ".csv"), 
             row.names = FALSE)
 }
+
+# source("/home/tli/projects/ShinyMLHome/Manual/manual_lightgbm.R")
