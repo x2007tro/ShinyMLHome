@@ -5,11 +5,11 @@
 # ##
 # # Saving data
 # ##
-# full_testdata <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "ml_test_predictors")
-# full_predictors <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "ml_train_predictors01")
-# full_target <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "ml_train_target")
+# full_testdata <- ReadDataFromSSviaCS("HomeLoanDefaultRisk_Aggr", "aggr_test_predictors01")
+# full_predictors <- ReadDataFromSSviaCS("HomeLoanDefaultRisk_Aggr", "aggr_train_predictors01")
+# full_target <- ReadDataFromSSviaCS("HomeLoanDefaultRisk_Aggr", "aggr_train_target")
 # tgt_map <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "input02_target_map")
-# save(full_predictors, full_target, full_testdata, tgt_map, file = "hcdr_full03.RData")
+# save(full_predictors, full_target, full_testdata, tgt_map, file = "hcdr_full04.RData")
 # 
 # ##
 # # first things first, parameters
@@ -19,8 +19,8 @@
 #   mlh_dir <- paste0("C:/Users/",Sys.info()["user"],"/Desktop/Data Science/ShinyMLHome/")
 # }
 # n_val_size <- 0.1
-# dataset_nm <- c("hcdr_sample","hcdr_full03")[2]
-# rmv_fs <- c('SK_ID_CURR')
+# dataset_nm <- c("hcdr_sample","hcdr_full04")[2]
+# rmv_fs <- c('km_SK_ID_CURR')
 # 
 # run_test <- FALSE
 # smote_flag <- FALSE
@@ -40,8 +40,8 @@
 # full_target <- full_target[, , drop = FALSE]
 # full_predictors <- full_predictors[, , drop = FALSE]
 # 
-# full_predictors <- AddFeatures(full_predictors, do = TRUE)
-# full_testdata <- AddFeatures(full_testdata, do = TRUE)
+# #full_predictors <- AddFeatures(full_predictors, do = TRUE)
+# #full_testdata <- AddFeatures(full_testdata, do = TRUE)
 # 
 # ##
 # # Take validation set
@@ -64,6 +64,7 @@
 # prdctrs_train <- FinalTouch(rem_predictors[,], rmv_fs)
 # train_peek1 <- prdctrs_train$peek1
 # train_peek2 <- prdctrs_train$peek2
+# rm(rem_predictors)
 # 
 # ##
 # # SMOTE data so the data can be balanced
@@ -89,11 +90,14 @@
 #   job = "bc",
 #   model = "lightgbm"
 # )
+# rm(prdctrs_train, rem_target)
 # 
 # ##
 # # Scale and OHE validation data
 # ##
 # prdctrs_val <- FinalTouch(val_predictors[,], rmv_fs)
+# rm(val_predictors)
+# gc()
 # 
 # ##
 # # Format validation data
@@ -104,21 +108,23 @@
 #   job = "bc",
 #   model = "lightgbm"
 # )
+# rm(prdctrs_val, val_target)
+# gc()
 # 
 # ##
 # # Scale and OHE
 # prdctrs_test <- FinalTouch(full_testdata, rmv_fs)
 # test_peek1 <- prdctrs_test$peek1
 # test_peek2 <- prdctrs_test$peek2
-# test_id <- full_testdata$SK_ID_CURR
+# test_id <- full_testdata$km_SK_ID_CURR
 # 
-# save(fmtd_train, fmtd_vald, prdctrs_test, test_id, tgt_map, file = "fmtd_data03.RData")
+# save(fmtd_train, fmtd_vald, prdctrs_test, test_id, tgt_map, file = "fmtd_data04.RData")
 
 ##
 # Continue point
 setwd(proj_dir)
-load("fmtd_data03.RData")
-load("lightgbm_5000n_features.RData")
+load("fmtd_data04.RData")
+load("lightgbm_feats04.RData")
 rm(prdctrs_test)
 gc()
 
@@ -152,7 +158,7 @@ static_pars <- list(
 
 ##
 # Select features
-prdctrs_sltd <- fmtd_train$predictors[, top_feats_all[1:550]]
+prdctrs_sltd <- fmtd_train$predictors[,]
 tgts <- fmtd_train$target
 rm(fmtd_train)
 gc()
@@ -197,7 +203,7 @@ gc()
 
 ##
 # Predict
-val_prdctrs_sltd <- fmtd_vald$predictors[, top_feats_all[1:550]]
+val_prdctrs_sltd <- fmtd_vald$predictors[, ]
 val_tgts <- fmtd_vald$target
 rm(fmtd_vald)
 gc()
@@ -217,7 +223,7 @@ if(TRUE){
   rm(fmtd_train, fmtd_vald)
   gc()
   
-  test_prdctrs_sltd <- prdctrs_test$coredata[, top_feats_all[1:550]]
+  test_prdctrs_sltd <- prdctrs_test$coredata[, ]
   rm(prdctrs_test)
   gc()
   

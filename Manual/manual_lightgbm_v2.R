@@ -10,7 +10,7 @@
 # full_target <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "ml_train_target")
 # tgt_map <- ReadDataFromSSviaCS("HomeLoanDefaultRisk", "input02_target_map")
 # save(full_predictors, full_target, full_testdata, tgt_map, file = "hcdr_full03.RData")
-# 
+#
 # ##
 # # first things first, parameters
 # if(R.Version()$os == "linux-gnu"){
@@ -21,50 +21,50 @@
 # n_val_size <- 0.1
 # dataset_nm <- c("hcdr_sample","hcdr_full03")[2]
 # rmv_fs <- c('SK_ID_CURR')
-# 
+#
 # run_test <- FALSE
 # smote_flag <- FALSE
-# 
+#
 # ##
 # # Load required source files and data
 # source(paste0(mlh_dir, "global.R"))
 # setwd(proj_dir)
 # load(paste0(proj_dir, dataset_nm, ".RData"))
-# 
+#
 # ##
 # # Manipulation
 # ##
-# 
+#
 # ##
 # # Take sample
 # full_target <- full_target[, , drop = FALSE]
 # full_predictors <- full_predictors[, , drop = FALSE]
-# 
+#
 # full_predictors <- AddFeatures(full_predictors, do = TRUE)
 # full_testdata <- AddFeatures(full_testdata, do = TRUE)
-# 
+#
 # ##
 # # Take validation set
 # allrows <- 1:nrow(full_target)
 # set.seed(123)
 # val_idx <- sample(allrows, floor(n_val_size*nrow(full_target)), replace = FALSE)
 # rem_idx <- allrows[!(allrows %in% val_idx)]
-# 
+#
 # rem_target <- full_target[rem_idx, , drop = FALSE]
 # rem_predictors <- full_predictors[rem_idx,]
-# 
+#
 # val_target <- full_target[val_idx, , drop = FALSE]
 # val_predictors <- full_predictors[val_idx,]
-# 
+#
 # rm(full_target, full_predictors)
 # gc()
-# 
+#
 # ##
 # # Scale and OHE training data
 # prdctrs_train <- FinalTouch(rem_predictors[,], rmv_fs)
 # train_peek1 <- prdctrs_train$peek1
 # train_peek2 <- prdctrs_train$peek2
-# 
+#
 # ##
 # # SMOTE data so the data can be balanced
 # if(smote_flag){
@@ -73,13 +73,13 @@
 #                        N = floor(1.5 * sum(bd_tmp$StrTarget == unique(bd_tmp$StrTarget)[1])),
 #                        p = 0.25,
 #                        seed = 1)$data
-# 
+#
 #   prdctrs_train$coredata <- bd_fnl[,-1]
 #   rem_target <- bd_fnl[,1,drop=FALSE]
 #   rm(bd_tmp, bd_fnl)
 #   gc()
 # }
-# 
+#
 # ##
 # # Format training data
 # fmtd_train <- FormatData4Model(
@@ -89,12 +89,12 @@
 #   job = "bc",
 #   model = "lightgbm"
 # )
-# 
+#
 # ##
 # # Scale and OHE validation data
 # ##
 # prdctrs_val <- FinalTouch(val_predictors[,], rmv_fs)
-# 
+#
 # ##
 # # Format validation data
 # fmtd_vald <- FormatData4Model(
@@ -104,14 +104,14 @@
 #   job = "bc",
 #   model = "lightgbm"
 # )
-# 
+#
 # ##
 # # Scale and OHE
 # prdctrs_test <- FinalTouch(full_testdata, rmv_fs)
 # test_peek1 <- prdctrs_test$peek1
 # test_peek2 <- prdctrs_test$peek2
 # test_id <- full_testdata$SK_ID_CURR
-# 
+#
 # save(fmtd_train, fmtd_vald, prdctrs_test, test_id, tgt_map, file = "fmtd_data03.RData")
 
 ##
@@ -120,7 +120,7 @@ rm(list=ls(all=TRUE))
 gc()
 gc()
 
-source("/home/tli/projects/ShinyMLHome/global.R")
+source("C:/Users/Ke/Desktop/Data Science/ShinyMLHome/global.R")
 setwd(proj_dir)
 load("hcdr_full04.RData")
 #load("lightgbm_5000n_features.RData")
@@ -141,7 +141,7 @@ rem_predictors <- aggr_predictors_ohe_scaled$coredata[rem_idx, -1]
 val_target <- km_tgt[val_idx, , drop = FALSE]
 val_predictors <- aggr_predictors_ohe_scaled$coredata[val_idx, -1]
 
-rm(km_tgt, aggr_predictors_ohe_scaled)
+rm(km_tgt, aggr_predictors_ohe_scaled, allrows)
 gc()
 
 ##
@@ -160,7 +160,7 @@ tuning_pars <- expand.grid(
   lambda_l2 = c(0),
   min_gain_to_split = c(0),
   early_stopping_round = c(0),
-  num_threads = c(6)
+  num_threads = c(-1)
 )
 
 ##
@@ -174,8 +174,10 @@ static_pars <- list(
 
 ##
 # Select features
-prdctrs_sltd <- rem_predictors[, ]
+train_sltd <- rem_predictors[, ]
 tgts <- rem_target
+rm(rem_predictors)
+gc()
 gc()
 
 ##
@@ -183,10 +185,10 @@ gc()
 br <- GridSearchLgbm2(
   proj = "HCDR",
   model_name = "lightgbm",
-  dataset = prdctrs_sltd,
+  dataset = as.matrix(train_sltd),
   labels = tgts,
   job = "bc",
-  val_size = floor(length(tgts)/20),
+  val_size = floor(length(tgts$StrTarget)/20),
   cv_rep = 1,
   mdl_pars = tuning_pars,   # data.frame
   stc_pars = static_pars,    # list
@@ -218,11 +220,12 @@ gc()
 
 ##
 # Predict
-val_prdctrs_sltd <- val_predictors[, ]
-val_tgts <- val_target
+val_sltd <- val_predictors[, ]
+val_tgts <- val_target$StrTarget
+rm(val_predictors)
 gc()
 
-val_pred <- predict(br$models[[1]][[1]], val_prdctrs_sltd)
+val_pred <- predict(br$models[[1]][[1]], as.matrix(val_sltd))
 rocr_pred <- ROCR::prediction(val_pred, val_tgts)
 rocr_perf <- ROCR::performance(rocr_pred, measure = "auc")
 print(rocr_perf@y.values)
@@ -232,19 +235,19 @@ print(rocr_perf@y.values)
 ##
 if(TRUE){
   
-  rm(fmtd_train, fmtd_vald)
-  load("fmtd_data03.RData")
-  rm(fmtd_train, fmtd_vald)
+  rm(val_sltd, train_sltd)
+  load("hcdr_full04.RData")
+  rm(aggr_predictors_ohe_scaled)
   gc()
   
-  test_prdctrs_sltd <- prdctrs_test$coredata[, top_feats_all[1:500]]
-  rm(prdctrs_test)
+  test_sltd <- aggr_testdata_ohe_scaled$coredata[,]
+  rm(aggr_testdata_ohe_scaled)
   gc()
   
   ##
   # Load model
   # load(paste0(proj_dir, "Output/Model/", mdl_nm))
-  pred_res <- predict(br$models[[1]][[1]], as.matrix(test_prdctrs_sltd))
+  pred_res <- predict(br$models[[1]][[1]], as.matrix(test_sltd))
   pred_res2 <- as.data.frame(pred_res)
   
   out <- data.frame(SK_ID_CURR = test_id,

@@ -73,7 +73,7 @@ OHE <- function(col_nms, dataset){
 DataScaleOneCol <- function(col_nm, dataset, rep_na, rep_na_with){
   vals <- dataset[,col_nm]
   if(is.numeric(vals) | is.integer(vals)){
-    if(min(vals, na.rm = TRUE) < 0 & max(vals, na.rm = TRUE) > 1){
+    if(min(abs(vals), na.rm = TRUE) < 0 & max(abs(vals), na.rm = TRUE) > 1){
       rnk <- rank(vals, ties.method = "average", na.last = TRUE)
       unif_converter <- function(x){(x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))}
       res <- unif_converter(rnk)
@@ -760,8 +760,8 @@ ListTblsFromSS <- function(dsn_nm){
 # Connect to SQL server using connection string
 ##
 ConnSqlServerViaCS <- function(dbn){
-  srv <- "192.168.2.50,3773"  # kmpka123.ddns.net
-  id <- "dspeast"
+  srv <- "192.168.2.120,3773"  # kmpka123.ddns.net
+  id <- "dspeast2"
   pwd <- "yuheng"
   
   conn <- DBI::dbConnect(drv = odbc::odbc(),

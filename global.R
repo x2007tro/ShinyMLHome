@@ -129,7 +129,7 @@ blotter_field_default_width <- "100px"
 ##
 jt <- c("bc", "mc", "rg")
 image_dim <- c(640, 480)   # width, height
-proj_db_name <- "HomeLoanDefaultRisk_Sample"
+proj_db_name <- "HomeLoanDefaultRisk"
 db_par_tbl <- "input01_parameters"
 db_target_map <- "input02_target_map"
 db_target_src <- "sample_target"
