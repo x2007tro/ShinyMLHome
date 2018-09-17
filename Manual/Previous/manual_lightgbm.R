@@ -128,24 +128,14 @@ load("lightgbm_feats04.RData")
 rm(prdctrs_test)
 gc()
 
+n_feats_sltd <- 700     # max number of feats 910
+
 ##
-# training parameters
-tuning_pars <- expand.grid(
-  num_leaves = c(31),
-  min_data_in_leaf = c(20),
-  max_depth = c(-1),
-  bagging_fraction = c(0.7),
-  bagging_freq = c(0),
-  feature_fraction = c(0.7),
-  max_bin = c(255),
-  learning_rate = c(0.01),
-  num_iterations = c(5000),
-  lambda_l1 = c(0),
-  lambda_l2 = c(0),
-  min_gain_to_split = c(0),
-  early_stopping_round = c(0),
-  num_threads = c(6)
-)
+# Select features
+prdctrs_sltd <- fmtd_train$predictors[,feats_all[1:n_feats_sltd]]
+tgts <- fmtd_train$target
+rm(fmtd_train)
+gc()
 
 ##
 # global parameters
@@ -157,11 +147,27 @@ static_pars <- list(
 )
 
 ##
-# Select features
-prdctrs_sltd <- fmtd_train$predictors[,]
-tgts <- fmtd_train$target
-rm(fmtd_train)
-gc()
+# training parameters
+tuning_pars <- expand.grid(
+  boosting = c(1),     # 0 - gbdt, 1 - dart
+  num_leaves = c(31),
+  min_data_in_leaf = c(300),
+  max_depth = c(50),
+  bagging_fraction = c(0.7),
+  bagging_freq = c(0),
+  feature_fraction = c(0.7),
+  max_bin = c(255),
+  learning_rate = c(0.075),
+  num_iterations = c(500),
+  lambda_l1 = c(5),
+  lambda_l2 = c(5),
+  min_gain_to_split = c(0),
+  early_stopping_round = c(0),
+  num_threads = c(6),
+  drop_rate = c(0.1),
+  max_drop = c(50),
+  skip_drop = c(0.5)
+)
 
 ##
 # Train
@@ -178,15 +184,17 @@ br <- GridSearchLgbm2(
   tgt_map = tgt_map
 )
 
-##
-# Present result
-score_board <- br$score_board
-conf_matrix <- as.data.frame(br$valdn_results[[1]][[1]]$cf)
+print(br$holdout_results[[1]][[1]])
 
-##
-# Variable importance
-var_imp <- lightgbm::lgb.importance(br$models[[1]][[1]])
-var_imp_plot <- lightgbm::lgb.plot.importance(var_imp, top_n = 10)
+# ##
+# # Present result
+# score_board <- br$score_board
+# conf_matrix <- as.data.frame(br$valdn_results[[1]][[1]]$cf)
+# 
+# ##
+# # Variable importance
+# var_imp <- lightgbm::lgb.importance(br$models[[1]][[1]])
+# var_imp_plot <- lightgbm::lgb.plot.importance(var_imp, top_n = 10)
 
 ##
 # Plot learning curve
@@ -203,7 +211,7 @@ gc()
 
 ##
 # Predict
-val_prdctrs_sltd <- fmtd_vald$predictors[, ]
+val_prdctrs_sltd <- fmtd_vald$predictors[, feats_all[1:n_feats_sltd]]
 val_tgts <- fmtd_vald$target
 rm(fmtd_vald)
 gc()
@@ -219,17 +227,17 @@ print(rocr_perf@y.values)
 if(TRUE){
   
   rm(fmtd_train, fmtd_vald)
-  load("fmtd_data03.RData")
+  load("fmtd_data04.RData")
   rm(fmtd_train, fmtd_vald)
   gc()
   
-  test_prdctrs_sltd <- prdctrs_test$coredata[, ]
+  test_prdctrs_sltd <- prdctrs_test$coredata[, feats_all[1:n_feats_sltd]]
   rm(prdctrs_test)
   gc()
   
   ##
   # Load model
-  # load(paste0(proj_dir, "Output/Model/", mdl_nm))
+  #load(paste0(proj_dir, "Output/Model/", "model_lightgbm_20180827-220338.RData"))
   pred_res <- predict(br$models[[1]][[1]], as.matrix(test_prdctrs_sltd))
   pred_res2 <- as.data.frame(pred_res)
   

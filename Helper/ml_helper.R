@@ -73,7 +73,7 @@ OHE <- function(col_nms, dataset){
 DataScaleOneCol <- function(col_nm, dataset, rep_na, rep_na_with){
   vals <- dataset[,col_nm]
   if(is.numeric(vals) | is.integer(vals)){
-    if(min(abs(vals), na.rm = TRUE) < 0 & max(abs(vals), na.rm = TRUE) > 1){
+    if(max(abs(vals), na.rm = TRUE) > 1){
       rnk <- rank(vals, ties.method = "average", na.last = TRUE)
       unif_converter <- function(x){(x-min(x, na.rm = TRUE))/(max(x, na.rm = TRUE)-min(x, na.rm = TRUE))}
       res <- unif_converter(rnk)
@@ -786,10 +786,10 @@ ReadDataFromSSviaCS <- function(dbn, tbl_name){
 ##
 # Write a table to sql server db
 ##
-WriteDataToSSviaCS <- function(dbn, data, tbl_name){
+WriteDataToSSviaCS <- function(dbn, data, tbl_name, apd = FALSE){
 	conn <- ConnSqlServerViaCS(dbn)
   df <- DBI::dbWriteTable(conn, name = tbl_name, value = data,
-                          append = FALSE, overwrite = TRUE, row.names = FALSE)
+                          append = apd, overwrite = !apd, row.names = FALSE)
 	DBI::dbDisconnect(conn) 				  
   return(df)
 }

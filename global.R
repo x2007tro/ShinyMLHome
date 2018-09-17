@@ -1,6 +1,10 @@
 ##
 # Package installer
 ##
+
+# for msft r open only
+checkpoint::checkpoint("2018-08-25")
+
 # shiny app
 if(!("shiny" %in% rownames(installed.packages()))) { install.packages("shiny") }
 if(!("DT" %in% rownames(installed.packages()))) { install.packages("DT") }
@@ -90,7 +94,7 @@ if(R.Version()$os == "linux-gnu"){
   dev_dir <- paste0("C:/Users/",Sys.info()["user"], "/OneDrive/Development/")
   root_dir <- paste0(dev_dir, "Data Science/Projects/")
   proj_dir <- paste0(root_dir, "HomeCreditDefaultRisk/")
-  shiny_dir <- paste0("C:/Users/",Sys.info()["user"],"/Desktop/Data Science/ShinyMLHome/")
+  shiny_dir <- paste0("C:/Github/ShinyMLHome/")
 }
 
 ##
@@ -106,7 +110,7 @@ source(paste0(shiny_dir, "Model/mnaivebayes.R"))
 source(paste0(shiny_dir, "Model/madaboost.R"))
 source(paste0(shiny_dir, "Model/mrandomforest.R"))
 source(paste0(shiny_dir, "Model/mgbmh2o.R"))
-source(paste0(shiny_dir, "Model/mlightgbm.R"))
+source(paste0(shiny_dir, "Model/mlightgbm_reserved.R"))
 source(paste0(proj_dir, "Helper/feature_manipulation.R"))
 
 ##
