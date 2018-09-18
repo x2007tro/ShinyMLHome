@@ -24,7 +24,7 @@
 # # Manipulation
 # ##
 # 
-# load(paste0(proj_dir, "./Dataset/", dataset_nm, ".RData"))
+load(paste0(proj_dir, "./Dataset/", dataset_nm, ".RData"))
 #
 # # 1.\ retrieve train target to replace NA with 0 and change it to numeric values
 # full_target <- train_final[, "totals_transactionRevenue", drop = FALSE] %>% 
@@ -125,7 +125,7 @@
 # gc()
 # 
 # # 6.\ Save formatted data
-# save(fmtd_train, tgt_map, fmtd_test, train_id, test_id, job, file = "./Dataset/dataset_2btrained01.RData")
+save(fmtd_train, tgt_map, fmtd_test, train_id, test_id, job, file = "./Dataset/dataset_2btrained01.RData")
 
 ##
 # Train the model
@@ -235,10 +235,9 @@ if(run_test){
   )
   
   # 3.\ Write results to file
-  write.csv(out, paste0(proj_dir, "Submission/",
+  data.table::fwrite(out, paste0(proj_dir, "Submission/",
                         "run_result_", format(Sys.Date(), "%Y%m%d"), "_", format(Sys.time(), "%H%M"),
-                        ".csv"), 
-            row.names = FALSE)
+                        ".csv"), row.names = FALSE, quote = TRUE)
   
   gc()
 }
