@@ -170,6 +170,7 @@ br <- GridSearchLgbm2(
   model_name = "lightgbm",
   dataset = fmtd_train$predictors[,],
   labels = fmtd_train$target[],
+  aggr_id = train_id$fullVisitorId,
   job = job,
   val_size = 10000,
   holdout_size = 10000,
@@ -191,7 +192,6 @@ score_board <- br$score_board
 var_imp <- lightgbm::lgb.importance(br$models[[1]][[1]])
 var_imp_plot <- lightgbm::lgb.plot.importance(var_imp, top_n = 10)
 all_feats <- var_imp$Feature
-save(all_feats, file = "all_imp_feats.RData")
 
 ### 6.3\ Confusion matrix (Optional) and learning curve
 if(job == "bc"){

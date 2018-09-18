@@ -35,12 +35,7 @@ OHEOneCol <- function(col_nm, dataset){
   
   ##
   # perform replacement
-  vals_l2 <- gsub(",", "_", vals_l2)
-  vals_l2 <- gsub(" ", "_", vals_l2)
-  vals_l2 <- gsub("-", "_", vals_l2)
-  vals_l2 <- gsub(" / ", "_", vals_l2)
-  vals_l2 <- gsub("/", "_", vals_l2)
-  
+  vals_l2 <- StringDecorator(vals_l2)
   vals <- unique(vals_l2)
   
   res <- matrix(0, nrow = nrow(dataset), ncol = length(vals))
@@ -65,6 +60,24 @@ OHE <- function(col_nms, dataset){
   }
   
   return(dataset_new)
+}
+
+##
+# String recorator
+## 
+StringDecorator <- function(istr){
+  istr <- gsub(",", "_", istr)
+  istr <- gsub(" ", "_", istr)
+  istr <- gsub("-", "_", istr)
+  istr <- gsub(" / ", "_", istr)
+  istr <- gsub("/", "_", istr)
+  istr <- gsub(":", "_", istr)
+  istr <- gsub("\"", "_", istr)
+  istr <- gsub("&", "_", istr)
+  istr <- gsub("(", "_", istr)
+  istr <- gsub(")", "_", istr)
+  
+  return(istr)
 }
 
 ##
@@ -515,7 +528,13 @@ PredictMe <- function(model, data, label = c(), job,
     accr_tmp <- sum(as.numeric(pred == label), na.rm = TRUE)/length(pred)
   } else {
     # calc RMSE
-    accr_tmp <- sqrt(sum((pred - ori_label)^2)/length(ori_label))
+    pred2 <- log(pred)
+    pred2[is.infinite(pred2) | is.na(pred2)] <- 0
+    
+    label2 <- log(ori_label)
+    label2[is.infinite(label2)] <- 0
+    
+    accr_tmp <- sqrt(sum((pred2 - label2)^2)/length(ori_label))
   }
   res <- list(
     prob = probs,
