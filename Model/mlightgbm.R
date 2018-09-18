@@ -10,17 +10,17 @@
 # BayesianSearch
 ##
 BayesianSearchLgbm2 <- function(proj = "",
-                                model_name,
-                                dataset,
-                                labels,
-                                job = c("bc", "mc", "rg"),
-                                sd = 0,   # 0 means no control over tf results
-                                val_size = 100,
-                                cv_rep = 5,
-                                mdl_pars,
-                                stc_pars,
-                                bs_pars,
-                                tgt_map){
+                              model_name,
+                              dataset,
+                              labels,
+                              job = c("bc", "mc", "rg"),
+                              sd = 0,   # 0 means no control over tf results
+                              val_size = 100,
+                              cv_rep = 5,
+                              mdl_pars,
+                              stc_pars,
+                              bs_pars,
+                              tgt_map){
   # assign local variables
   bs_proj <- proj
   bs_ds <- dataset   # used
@@ -31,7 +31,8 @@ BayesianSearchLgbm2 <- function(proj = "",
   bs_cv_rep <- cv_rep   # used
   
   # define optimization function
-  BsOpUtil <- function(num_leaves, 
+  BsOpUtil <- function(boosting,
+                       num_leaves, 
                        min_data_in_leaff, 
                        max_depth, 
                        bagging_fraction, 
@@ -44,10 +45,15 @@ BayesianSearchLgbm2 <- function(proj = "",
                        lambda_l2, 
                        min_gain_to_split, 
                        early_stopping_round,
-                       num_threads){
+                       num_threads,
+                       drop_rate = drop_rate,
+                       max_drop = max_drop,
+                       skip_drop = skip_drop
+                       ){
     ##
     # create parameter
     mdl_pars_bayesian <- data.frame(
+      boosting = floor(boosting),
       num_leaves = floor(num_leaves), 
       min_data_in_leaff = floor(min_data_in_leaff), 
       max_depth = floor(max_depth), 
@@ -62,6 +68,9 @@ BayesianSearchLgbm2 <- function(proj = "",
       min_gain_to_split = min_gain_to_split, 
       early_stopping_round = floor(early_stopping_round),
       num_threads = floor(num_threads),
+      drop_rate = drop_rate,
+      max_drop = max_drop,
+      skip_drop = skip_drop,
       stringsAsFactors = FALSE
     )
     
@@ -79,8 +88,8 @@ BayesianSearchLgbm2 <- function(proj = "",
       mdl_pars = mdl_pars_bayesian,
       stc_pars = stc_pars,
       tgt_map)
-    
-    acc <- mean(tr_res$score_board$avg_acc, na.rm = TRUE)  # alough only one row
+                          
+    acc <- mean(unlist(tr_res$holdout_res_list), na.rm = TRUE)  # alough only one row
     
     return(list(Score = acc, Pred = 0))
   }
@@ -116,6 +125,7 @@ GridSearchLgbm2 <- function(proj = "",
                             labels,
                             job = c("bc", "mc", "rg"),
                             val_size = 100,
+                            holdout_size = 100,
                             cv_rep = 5,
                             mdl_pars,
                             stc_pars,
@@ -126,6 +136,7 @@ GridSearchLgbm2 <- function(proj = "",
   gs_ls <- labels   # used
   gs_jb <- match.arg(job)   # used
   gs_val_sz <- val_size   # used
+  gs_ho_sz <- holdout_size
   gs_cv_rep <- cv_rep   # used
   gs_ly_pars <- mdl_pars   # used
   
@@ -150,6 +161,7 @@ GridSearchLgbm2 <- function(proj = "",
                            job = gs_jb,
                            n = i,
                            val_size = gs_val_sz,
+                           holdout_size = gs_ho_sz,
                            cv_rep = gs_cv_rep,
                            mdl_pars = mdl_par,
                            stc_pars = stc_pars,
@@ -162,12 +174,14 @@ GridSearchLgbm2 <- function(proj = "",
     models <- purrr::map(res2, 2)
     train_results <- purrr::map(res2, 3)
     valdn_results <- purrr::map(res2, 4)
+    holdout_results <- purrr::map(res2, 5)
     
     res <- list(
       score_board = score_board,
       models = models,
       train_results = train_results,
-      valdn_results = valdn_results
+      valdn_results = valdn_results,
+      holdout_results = holdout_results
     )
   } else {
     print("Error: no parameters for tuning!")
@@ -186,6 +200,7 @@ CrossValLgbm2 <- function(proj = "",
                           job = c("bc", "mc", "rg"),
                           n,
                           val_size = 100,
+                          holdout_size = 100,
                           cv_rep = 5,
                           mdl_pars,
                           stc_pars,
@@ -195,8 +210,13 @@ CrossValLgbm2 <- function(proj = "",
   cv_proj <- proj
   cv_ds <- dataset   # used
   cv_ls <- labels   # used
+  
+  rm(dataset, labels)
+  gc()
+  
   cv_jb <- match.arg(job)   # used
   cv_val_sz <- val_size   # used
+  cv_ho_sz <- holdout_size
   cv_cv_sd <- 1234   # used
   cv_cv_rep <- cv_rep   # used
   cv_mdl_pars <- mdl_pars
@@ -205,21 +225,28 @@ CrossValLgbm2 <- function(proj = "",
   # split data
   all_res <- lapply(1:cv_cv_rep, function(i){
     ##
-    # Split training and validation set
-    ##
-    splt_sd <- cv_cv_sd + 100*i
+    # Process holdout and validation size
+    set.seed(123)
     allrows <- 1:nrow(cv_ds)
+    holdout_index <- sample(allrows, cv_ho_sz, replace = FALSE)
+    remain_index <- allrows[!(allrows %in% holdout_index)]
+    
+    ##
+    # Split training and validation set
+    splt_sd <- cv_cv_sd + 100*i
     set.seed(splt_sd)
-    valdn_idx <- sample(allrows, cv_val_sz, replace = FALSE)
-    train_idx <- allrows[!(allrows %in% valdn_idx)]
+    valdn_idx <- sample(remain_index, cv_val_sz, replace = FALSE)
+    train_idx <- remain_index[!(remain_index %in% valdn_idx)]
     
     # trainset
     ripe_strain <- cv_ds[train_idx,]
     ripe_valdn <- cv_ds[valdn_idx,]
+    ripe_holdout <- cv_ds[holdout_index,]
     
     # target
     target_strain <- cv_ls[train_idx]
     target_valdn <- cv_ls[valdn_idx]
+    target_holdout <- cv_ls[holdout_index]
     
     ##
     # apply model
@@ -246,6 +273,32 @@ CrossValLgbm2 <- function(proj = "",
                       tgt_map = tgt_map,
                       output_dir = "Output")
     
+    ##
+    # test holdout
+    if(cv_jb == "bc"){
+      # calculate AUC
+      ho_pred <- predict(mdl$model, ripe_holdout)
+      if(class(target_holdout) != "integer") target_holdout <- SwapTargetType(target_holdout,
+                                                                              tgt_map,
+                                                                              "StrTarget",
+                                                                              "NumTarget")
+      rocr_pred <- ROCR::prediction(ho_pred, target_holdout)
+      rocr_perf <- ROCR::performance(rocr_pred, measure = "auc")
+      ho_res<- rocr_perf@y.values
+    } else if(cv_jb == "rg") {
+      # calculate RMSE
+      ho_pred <- predict(mdl$model, ripe_holdout)
+      if(class(target_holdout) != "numeric") target_holdout <- SwapTargetType(target_holdout,
+                                                                              tgt_map,
+                                                                              "StrTarget",
+                                                                              "NumTarget")
+      rmse_res <- sqrt(sum((ho_pred - target_holdout)^2)/length(target_holdout))
+      ho_res <- rmse_res
+    } else {
+      ho_res <- 0
+    }
+    mdl$holdout_res <- ho_res
+    
     return(mdl)
   })
   
@@ -255,10 +308,11 @@ CrossValLgbm2 <- function(proj = "",
   res <- purrr::map(all_res,2)
   cv_res <- dplyr::bind_rows(res) 
   cv_res <- cv_res %>% 
-    dplyr::group_by(proj, job, num_of_leaves, min_leaf_size, max_depth, 
+    dplyr::group_by(proj, job, boosting, num_of_leaves, min_leaf_size, max_depth, 
                     data_subset, data_subset_freq, feature_subset, 
                     max_bin, learning_rate, num_of_trees, reg_l1, reg_l2, 
-                    min_gain_to_split, early_stopping_round, num_threads) %>% 
+                    min_gain_to_split, early_stopping_round, num_threads,
+                    drop_rate, max_drop, skip_drop) %>% 
     summarise(
       avg_na_perc = mean(na_perc, na.rm = TRUE),
       #avg_loss = -1,
@@ -267,11 +321,15 @@ CrossValLgbm2 <- function(proj = "",
       std_acc = ifelse(n() == 1, -1, format(sd(accuracy, na.rm = TRUE), digits = 2))
     )
   
+  rm(cv_ds, cv_ls)
+  gc()
+  
   return(list(
     score_board = cv_res,
     model_list = purrr::map(all_res, 1),
     train_res_list = purrr::map(all_res, 3),
-    valdn_res_list = purrr::map(all_res, 4)
+    valdn_res_list = purrr::map(all_res, 4),
+    holdout_res_list = purrr::map(all_res, 5)
   ))
 }
 
@@ -279,19 +337,19 @@ CrossValLgbm2 <- function(proj = "",
 # function TrainTF
 ##
 TrainLgbm2 <- function(proj_nm = "",
-                       model_name,
-                       split_id = 1,
-                       job = c("bc", "mc", "rg"),  # binary class., multi class., regression
-                       tr_dataset = data.frame(f1=character(0)),
-                       tr_labels = c(),
-                       tr_idx = c(),
-                       val_dataset = data.frame(f1=character(0)),
-                       val_labels = c(),
-                       val_idx = c(),
-                       mdl_pars,
-                       stc_pars,
-                       tgt_map,
-                       output_dir){
+                          model_name,
+                          split_id = 1,
+                          job = c("bc", "mc", "rg"),  # binary class., multi class., regression
+                          tr_dataset = data.frame(f1=character(0)),
+                          tr_labels = c(),
+                          tr_idx = c(),
+                          val_dataset = data.frame(f1=character(0)),
+                          val_labels = c(),
+                          val_idx = c(),
+                          mdl_pars,
+                          stc_pars,
+                          tgt_map,
+                          output_dir){
   
   ##
   # Input validationcolsample_bytree
@@ -331,11 +389,11 @@ TrainLgbm2 <- function(proj_nm = "",
   # Train decision tree model
   ##
   mdl <- CoreTrainLgbm2(x = mdl_trds,
-                        y = mdl_trl,
-                        x_val = mdl_vads,
-                        y_val = mdl_val,
-                        pars = mdl_pars,
-                        job = mdl_job)
+                           y = mdl_trl,
+                           x_val = mdl_vads,
+                           y_val = mdl_val,
+                           pars = mdl_pars,
+                           job = mdl_job)
   ##
   # predict train data - return three/five items
   #
@@ -372,6 +430,7 @@ TrainLgbm2 <- function(proj_nm = "",
     proj = mdl_pn,
     spt_id = mdl_si,
     job = mdl_job,
+    boosting = if(mdl_pars[1, "boosting"] == 0) "gbdt" else "dart",
     num_of_leaves = mdl_pars[1, "num_leaves"], 
     min_leaf_size = mdl_pars[1, "min_data_in_leaf"], 
     max_depth = mdl_pars[1, "max_depth"], 
@@ -386,6 +445,9 @@ TrainLgbm2 <- function(proj_nm = "",
     min_gain_to_split = mdl_pars[1, "min_gain_to_split"], 
     early_stopping_round = mdl_pars[1, "early_stopping_round"],
     num_threads = mdl_pars[1, "num_threads"],
+    drop_rate = mdl_pars[1, "drop_rate"], # only in dart
+    max_drop = mdl_pars[1, "max_drop"], # only in dart
+    skip_drop = mdl_pars[1, "skip_drop"], # only in dart
     na_perc = valp$na_pred,
     accuracy = valp$accr,
     stringsAsFactors = FALSE

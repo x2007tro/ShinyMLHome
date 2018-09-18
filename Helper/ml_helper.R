@@ -514,8 +514,8 @@ PredictMe <- function(model, data, label = c(), job,
     # calc accurary
     accr_tmp <- sum(as.numeric(pred == label), na.rm = TRUE)/length(pred)
   } else {
-    # calc sum square error
-    accr_tmp <- sum((pred - ori_label)^2)
+    # calc RMSE
+    accr_tmp <- sqrt(sum((pred - ori_label)^2)/length(ori_label))
   }
   res <- list(
     prob = probs,
@@ -671,6 +671,33 @@ GKTauMatrix <- function(col_nms, dataset){
     res[x, y] <- GKTau2(dataset[,x], dataset[,y])
     res[y, x] <- GKTau2(dataset[,y], dataset[,x])
   }
+  
+  return(res)
+}
+
+##
+# Remove unneeded data and scale and ohe the data
+##
+FinalTouch <- function(dataset, rmv_fs){
+  ##
+  # Feature removal
+  if(length(rmv_fs) == 0) prdctrs1_t <- dataset else prdctrs1_t <- dataset %>% select(-one_of(rmv_fs))
+  
+  ##
+  # Scale and OHE
+  prdctrs1_t_peek <- DataInspection(prdctrs1_t)
+  num_cols <- prdctrs1_t_peek[prdctrs1_t_peek$class != "character","feature"]
+  chr_cols <- prdctrs1_t_peek[prdctrs1_t_peek$class == "character","feature"]
+  
+  data_scaled_t <- DataScale(num_cols, prdctrs1_t, rep_na = TRUE, rep_na_with = 0)
+  data_scaled_ohe_t <- OHE(chr_cols, data_scaled_t)
+  prdctrs2_t_peek <- DataInspection(data_scaled_ohe_t)   # info only
+  
+  res <- list(
+    peek1 = prdctrs1_t_peek,
+    peek2 = prdctrs2_t_peek,
+    coredata = data_scaled_ohe_t
+  )
   
   return(res)
 }

@@ -88,12 +88,12 @@ library(h2o)
 #
 if(R.Version()$os == "linux-gnu"){
   root_dir <- paste0("/home/",Sys.info()["user"], "/projects/")
-  proj_dir <- paste0(root_dir, "Data Science/HomeLoanDefaultRisk/")
+  proj_dir <- paste0(root_dir, "Data Science/GoogleAnalyticsCustomerRevenuePrediction/")
   shiny_dir <- paste0(root_dir,"ShinyMLHome/")
 } else {
   dev_dir <- paste0("C:/Users/",Sys.info()["user"], "/OneDrive/Development/")
   root_dir <- paste0(dev_dir, "Data Science/Projects/")
-  proj_dir <- paste0(root_dir, "HomeCreditDefaultRisk/")
+  proj_dir <- paste0(root_dir, "GoogleAnalyticsCustomerRevenuePrediction/")
   shiny_dir <- paste0("C:/Github/ShinyMLHome/")
 }
 
@@ -110,8 +110,8 @@ source(paste0(shiny_dir, "Model/mnaivebayes.R"))
 source(paste0(shiny_dir, "Model/madaboost.R"))
 source(paste0(shiny_dir, "Model/mrandomforest.R"))
 source(paste0(shiny_dir, "Model/mgbmh2o.R"))
-source(paste0(shiny_dir, "Model/mlightgbm_reserved.R"))
-source(paste0(proj_dir, "Helper/feature_manipulation.R"))
+source(paste0(shiny_dir, "Model/mlightgbm.R"))
+#source(paste0(proj_dir, "Helper/feature_manipulation.R"))
 
 ##
 # UI parameters
@@ -133,7 +133,7 @@ blotter_field_default_width <- "100px"
 ##
 jt <- c("bc", "mc", "rg")
 image_dim <- c(640, 480)   # width, height
-proj_db_name <- "HomeLoanDefaultRisk"
+proj_db_name <- "GoogleAnalyticsCustomerRevenuePrediction"
 db_par_tbl <- "input01_parameters"
 db_target_map <- "input02_target_map"
 db_target_src <- "sample_target"
@@ -141,11 +141,11 @@ db_predictors_src <- "sample_predictors01_scaled_ohe"
 
 ##
 # initialize project variable
-global_pars <- ReadDataFromSSviaCS(proj_db_name, db_par_tbl)
-ini_proj <- global_pars[1, "Project"]
-ini_job <- global_pars[1, "Job"]
-ini_vds <- global_pars[1, "ValidationDatasetSize"]
-ini_cvrep <- global_pars[1, "CVRep"]
+# global_pars <- ReadDataFromSSviaCS(proj_db_name, db_par_tbl)
+# ini_proj <- global_pars[1, "Project"]
+# ini_job <- global_pars[1, "Job"]
+# ini_vds <- global_pars[1, "ValidationDatasetSize"]
+# ini_cvrep <- global_pars[1, "CVRep"]
 
 ##
 # model parameters
@@ -154,28 +154,28 @@ mdl_db_name <- "MachineLearningAlgorithm"
 mdl_db_avl_mdls <- "* Input 02 : Available Models *"
 mdl_db_unv_mp <- "* Input 05 : Universal Model Parameters *"
 mdl_db_bs_mp <- "* Input 09 : Bayesian Search Parameters *"
-mdl_db_xgbt_mp <- "* Input 10 : Xgbtree Parameters *"
-mdl_db_tf_mp <- "* Input 11 : Tensorflow Parameters *"
-mdl_db_rg_mp <- "* Input 12 : Regression Parameters *"
-mdl_db_dt_mp <- "* Input 13 : Decision Tree Parameters *"
-mdl_db_nb_mp <- "* Input 14 : Naive Bayes Parameters *"
-mdl_db_ab_mp <- "* Input 15 : Adaptive Boosting Parameters *"
-mdl_db_rf_mp <- "* Input 16 : Random Forest Parameters *"
-mdl_db_gbm_mp <- "* Input 17 : GBM H2O Parameters *"
+# mdl_db_xgbt_mp <- "* Input 10 : Xgbtree Parameters *"
+# mdl_db_tf_mp <- "* Input 11 : Tensorflow Parameters *"
+# mdl_db_rg_mp <- "* Input 12 : Regression Parameters *"
+# mdl_db_dt_mp <- "* Input 13 : Decision Tree Parameters *"
+# mdl_db_nb_mp <- "* Input 14 : Naive Bayes Parameters *"
+# mdl_db_ab_mp <- "* Input 15 : Adaptive Boosting Parameters *"
+# mdl_db_rf_mp <- "* Input 16 : Random Forest Parameters *"
+# mdl_db_gbm_mp <- "* Input 17 : GBM H2O Parameters *"
 mdl_db_lgbm_mp <- "* Input 18 : Light GBM Parameters *"
 
 model_output_specs <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_avl_mdls)
 all_models <- model_output_specs$model
 unv_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_unv_mp)
 bs_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_bs_mp)
-xgbt_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_xgbt_mp)
-tf_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_tf_mp)
-dt_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_dt_mp)
-nb_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_nb_mp)
-rg_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_rg_mp)
-ab_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_ab_mp)
-rf_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_rf_mp)
-gbm_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_gbm_mp)
+# xgbt_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_xgbt_mp)
+# tf_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_tf_mp)
+# dt_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_dt_mp)
+# nb_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_nb_mp)
+# rg_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_rg_mp)
+# ab_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_ab_mp)
+# rf_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_rf_mp)
+# gbm_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_gbm_mp)
 lgbm_pars <- ReadDataFromSSviaCS(mdl_db_name, mdl_db_lgbm_mp)
 
 ##
