@@ -11,7 +11,7 @@
 #   mlh_dir <- paste0("C:/Github/ShinyMLHome/")
 # }
 # dataset_nm <- c("dataset")[1]
-# rmv_fs <- c("sessionId", "visitId")  # features to be excluded for training
+# rmv_fs <- c("sessionId", "visitId")  # features to be excluded for training (except user_id)
 # 
 # ##
 # # Load required source files and data
@@ -19,22 +19,20 @@
 # source(paste0(proj_dir, "Helper/", "results_aggregation.R"))
 # setwd(proj_dir)
 # 
-#
 # ##
 # # Manipulation
 # ##
+# load(paste0(proj_dir, "./Dataset/", dataset_nm, ".RData"))
 # 
-load(paste0(proj_dir, "./Dataset/", dataset_nm, ".RData"))
-#
 # # 1.\ retrieve train target to replace NA with 0 and change it to numeric values
-# full_target <- train_final[, "totals_transactionRevenue", drop = FALSE] %>% 
-#   dplyr::mutate(target = ifelse(is.na(totals_transactionRevenue), 0, totals_transactionRevenue)) %>% 
+# full_target <- train_final[, "totals_transactionRevenue", drop = FALSE] %>%
+#   dplyr::mutate(target = ifelse(is.na(totals_transactionRevenue), 0, totals_transactionRevenue)) %>%
 #   dplyr::select(target)
 # 
 # # 2.\ create target map
 # tgt_map <- data.frame(
-#   StrTarget = unique(target$target),
-#   NumTarget = as.numeric(unique(target$target)),
+#   StrTarget = unique(full_target$target),
+#   NumTarget = as.numeric(unique(full_target$target)),
 #   stringsAsFactors = FALSE
 # )
 # 
@@ -43,9 +41,9 @@ load(paste0(proj_dir, "./Dataset/", dataset_nm, ".RData"))
 # test_id <- test_final[, "fullVisitorId", drop = FALSE]
 # 
 # # 4.\ remove target and id from train and test dataset
-# train1 <- train_final %>% dplyr::select(-dplyr::one_of(c("totals_transactionRevenue", "fullVisitorId"))) %>% 
+# train1 <- train_final %>% dplyr::select(-dplyr::one_of(c("totals_transactionRevenue", "fullVisitorId"))) %>%
 #   dplyr::mutate(am_i_train = 1)
-# test1 <- test_final %>% dplyr::select(-fullVisitorId) %>% 
+# test1 <- test_final %>% dplyr::select(-fullVisitorId) %>%
 #   dplyr::mutate(am_i_train = 0)
 # train_n_test <- rbind.data.frame(train1, test1)
 # train_n_test_peek <- DataInspection(train_n_test)
@@ -54,28 +52,28 @@ load(paste0(proj_dir, "./Dataset/", dataset_nm, ".RData"))
 # #
 # # serious feature engineering code needed
 # #
-# train_n_test_new <- train_n_test[, 
-#   train_n_test_peek[(train_n_test_peek$class == "character" & 
+# train_n_test_new <- train_n_test[,
+#   train_n_test_peek[(train_n_test_peek$class == "character" &
 #                       train_n_test_peek$value_cnt <= 50) | train_n_test_peek$class != "character", "feature"]]
 # 
 # # 6.\ Scale and OHE the full dataset
-# prdctrs <- FinalTouch(train_n_test_new[,], 
-#                       c(rmv_fs, 
+# prdctrs <- FinalTouch(train_n_test_new[,],
+#                       c(rmv_fs,
 #                         train_n_test_peek[train_n_test_peek$value_cnt == 1, "feature"]))
 # train_peek1 <- prdctrs$peek1
 # train_peek2 <- prdctrs$peek2
 # # rm(train_n_test_new)      # if running out of memory, delete used dataset
 # 
 # # 7.\ separate training and test dataset
-# full_train <- prdctrs$coredata[prdctrs$coredata$am_i_train == 1, ] %>% 
+# full_train <- prdctrs$coredata[prdctrs$coredata$am_i_train == 1, ] %>%
 #   dplyr::select(-am_i_train)
 # 
-# full_test <- prdctrs$coredata[prdctrs$coredata$am_i_train == 0, ] %>% 
+# full_test <- prdctrs$coredata[prdctrs$coredata$am_i_train == 0, ] %>%
 #   dplyr::select(-am_i_train)
 # 
 # # 8.\ Save data for model training
 # save(full_train, full_target, tgt_map, full_test, train_id, test_id, file = "./Dataset/dataset_engineered01.RData")
-#
+# 
 # ##
 # # data formatting
 # ##
@@ -125,7 +123,7 @@ load(paste0(proj_dir, "./Dataset/", dataset_nm, ".RData"))
 # gc()
 # 
 # # 6.\ Save formatted data
-save(fmtd_train, tgt_map, fmtd_test, train_id, test_id, job, file = "./Dataset/dataset_2btrained01.RData")
+# save(fmtd_train, tgt_map, fmtd_test, train_id, test_id, job, file = "./Dataset/dataset_2btrained01.RData")
 
 ##
 # Train the model
@@ -187,6 +185,7 @@ print(paste0("Holdout result is ", br$holdout_results[[1]][[1]]))
 
 ### 6.1\ score board
 score_board <- br$score_board
+print(paste0("Validation result is ", score_board$avg_acc))
 
 ### 6.2\ Variable importance
 var_imp <- lightgbm::lgb.importance(br$models[[1]][[1]])
@@ -197,7 +196,7 @@ all_feats <- var_imp$Feature
 if(job == "bc"){
   ### Confusion matrix
   conf_matrix <- as.data.frame(br$valdn_results[[1]][[1]]$cf)
-  
+
   ### Learning curve
   eval_res <- data.frame(
     iter = 1:length(br$models[[1]][[1]]$record_evals$train$binary_logloss$eval),
@@ -224,20 +223,20 @@ mdl_lc
 # Generate test data
 ##
 if(run_test){
-  
+
   # 1.\ Run prediction
   pred_res <- predict(br$models[[1]][[1]], fmtd_test$predictors)
-  
+
   # 2.\ Results aggregation
   out <- GACRPAggRevByFullVisitorID(
     visitor_id = test_id$fullVisitorId,
     proj_rev = pred_res
   )
-  
+
   # 3.\ Write results to file
   data.table::fwrite(out, paste0(proj_dir, "Submission/",
                         "run_result_", format(Sys.Date(), "%Y%m%d"), "_", format(Sys.time(), "%H%M"),
                         ".csv"), row.names = FALSE, quote = TRUE)
-  
+
   gc()
 }

@@ -74,8 +74,8 @@ StringDecorator <- function(istr){
   istr <- gsub(":", "_", istr)
   istr <- gsub("\"", "_", istr)
   istr <- gsub("&", "_", istr)
-  istr <- gsub("(", "_", istr)
-  istr <- gsub(")", "_", istr)
+  #istr <- gsub(')', "_", istr)
+  #istr <- gsub('(', "_", istr)
   
   return(istr)
 }
@@ -708,8 +708,8 @@ FinalTouch <- function(dataset, rmv_fs){
   num_cols <- prdctrs1_t_peek[prdctrs1_t_peek$class != "character","feature"]
   chr_cols <- prdctrs1_t_peek[prdctrs1_t_peek$class == "character","feature"]
   
-  data_scaled_t <- DataScale(num_cols, prdctrs1_t, rep_na = TRUE, rep_na_with = 0)
-  data_scaled_ohe_t <- OHE(chr_cols, data_scaled_t)
+  #data_scaled_t <- DataScale(num_cols, prdctrs1_t, rep_na = TRUE, rep_na_with = 0)
+  data_scaled_ohe_t <- OHE(chr_cols, prdctrs1_t)
   prdctrs2_t_peek <- DataInspection(data_scaled_ohe_t)   # info only
   
   res <- list(
