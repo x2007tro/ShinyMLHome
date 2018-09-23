@@ -806,7 +806,7 @@ ListTblsFromSS <- function(dsn_nm){
 # Connect to SQL server using connection string
 ##
 ConnSqlServerViaCS <- function(dbn){
-  srv <- "192.168.2.120,3773"  # kmpka123.ddns.net
+  srv <- "192.168.2.120,3773" 
   id <- "dspeast2"
   pwd <- "yuheng"
   
